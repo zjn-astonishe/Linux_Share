@@ -1,6 +1,6 @@
 make --dry-run --keep-going --print-directory
 make: Entering directory '/mnt/Linux_Share/Code/Linux-TCP-Aug'
-gcc wrap.o sample_server.o -o sample_server
-gcc sample_client.c -o sample_client
+g++ test_net_ser.cpp -o test_net_ser
+g++ test_net_cli.cpp -o test_net_cli
 make: Leaving directory '/mnt/Linux_Share/Code/Linux-TCP-Aug'
  

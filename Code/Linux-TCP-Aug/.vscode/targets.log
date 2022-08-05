@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Fri Aug  5 16:17:51 2022
+# Make data base, printed on Fri Aug  5 17:50:11 2022
 
 # Variables
 
@@ -169,9 +169,9 @@ MOTD_SHOWN = pam
 
 # Directories
 
-# . (device 53, inode 5910974510932198): 24 files, no impossibilities.
+# . (device 53, inode 5910974510932198): 25 files, no impossibilities.
 
-# 24 files, no impossibilities in 1 directories.
+# 25 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -179,13 +179,12 @@ MOTD_SHOWN = pam
 
 # Files
 
-all: wrap.o sample_server.o
+all:
 #  Command line target.
 #  Implicit rule search has not been done.
 #  Implicit/static pattern stem: ''
 #  File does not exist.
 #  File has been updated.
- 
 #  Needs to be updated (-q is set).
 # automatic
 # @ := all
@@ -194,20 +193,20 @@ all: wrap.o sample_server.o
 # automatic
 # * := 
 # automatic
-# + := wrap.o sample_server.o
+# + := 
 # automatic
 # | := 
 # automatic
-# < := wrap.o
+# < := 
 # automatic
-# ^ := wrap.o sample_server.o
+# ^ := 
 # automatic
-# ? := wrap.o sample_server.o
+# ? := 
 # variable set hash-table stats:
 # Load=8/32=25%, Rehash=0, Collisions=1/11=9%
-#  recipe to execute (from 'Makefile', line 2):
-	gcc wrap.o sample_server.o -o sample_server
-	gcc sample_client.c -o sample_client
+#  recipe to execute (from 'Makefile', line 17):
+	g++ test_net_ser.cpp -o test_net_ser
+	g++ test_net_cli.cpp -o test_net_cli
 
 # Not a target:
 .SUFFIXES:
@@ -218,7 +217,7 @@ all: wrap.o sample_server.o
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-08-05 16:17:11.9694776
+#  Last modified 2022-08-05 17:50:06.3831948
 #  File has been updated.
 #  Successfully updated.
 
@@ -232,39 +231,23 @@ clean:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 12):
-	rm *.o
-
-sample_server.o:
-#  Implicit rule search has not been done.
-#  Last modified 2022-08-05 16:17:14.7623341
-#  File has been updated.
-#  Successfully updated.
-#  recipe to execute (from 'Makefile', line 9):
-	gcc -c sample_server.c
-
-wrap.o:
-#  Implicit rule search has not been done.
-#  Last modified 2022-08-05 16:15:01.1297631
-#  File has been updated.
-#  Successfully updated.
-#  recipe to execute (from 'Makefile', line 6):
-	gcc -c wrap.c
+#  recipe to execute (from 'Makefile', line 21):
+	rm -rf test_net_cli test_net_ser
 
 # files hash-table stats:
-# Load=7/1024=1%, Rehash=0, Collisions=0/23=0%
+# Load=5/1024=0%, Rehash=0, Collisions=0/17=0%
 # VPATH Search Paths
 
 # No 'vpath' search paths.
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 30 / storage = 321 B / avg = 10 B
-# current buf: size = 8162 B / used = 321 B / count = 30 / avg = 10 B
+# strcache buffers: 1 (0) / strings = 31 / storage = 332 B / avg = 10 B
+# current buf: size = 8162 B / used = 332 B / count = 31 / avg = 10 B
 
-# strcache performance: lookups = 44 / hit rate = 31%
+# strcache performance: lookups = 39 / hit rate = 20%
 # hash-table stats:
-# Load=30/8192=0%, Rehash=0, Collisions=1/44=2%
-# Finished Make data base on Fri Aug  5 16:17:51 2022
+# Load=31/8192=0%, Rehash=0, Collisions=1/39=3%
+# Finished Make data base on Fri Aug  5 17:50:11 2022
 
  

@@ -54,7 +54,6 @@ int main(int argc, char *argv[])
     {
         cout << "Input content: ";
         cin >> message;
-        cout << message << endl;
         write(client_socket, message, sizeof(message));
         if(!strcmp(message, "close"))
             is_connect = false;
