@@ -1,15 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
+#include <string>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+
+using namespace std;
 
 void error_handle(char *message);
 
 int main(int argc, char *argv[])
 {
     int client_socket;
+    bool is_connect;
     struct sockaddr_in server_addr;
     
     if(argc != 3)
@@ -32,14 +37,29 @@ int main(int argc, char *argv[])
     {
         error_handle("Connect Error");
     }
+    else
+        is_connect = true;
 
+    // char message[128];
+    // int str_len = read(client_socket, message, sizeof(message) - 1);
+    // if(str_len == -1)
+    // {
+    //     error_handle("Read Error");
+    // }
+    // printf("Message From Server: %s\n", message);
+    // 发送数据
+    string input;
     char message[128];
-    int str_len = read(client_socket, message, sizeof(message) - 1);
-    if(str_len == -1)
+    while(is_connect)
     {
-        error_handle("Read Error");
+        cout << "Input content: ";
+        cin >> message;
+        cout << message << endl;
+        write(client_socket, message, sizeof(message));
+        if(!strcmp(message, "close"))
+            is_connect = false;
     }
-    printf("Message From Server: %s\n", message);
+    
     
     close(client_socket);
     return 0;

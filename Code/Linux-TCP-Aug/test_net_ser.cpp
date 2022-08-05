@@ -51,21 +51,40 @@ int main(int argc, char *argv[])
         error_handle("Listen errir");
     }
 
-    // 接收客户端的连接请求
-    client_addr_size = sizeof(client_addr);
-    client_socket = accept(server_socket, (struct sockaddr*)&client_addr, &client_addr_size);
-    if(client_socket == -1)
+    while(1)
     {
-        error_handle("Accept Error");
+        // 接收客户端的连接请求
+        client_addr_size = sizeof(client_addr);
+        client_socket = accept(server_socket, (struct sockaddr*)&client_addr, &client_addr_size);
+        if(client_socket == -1)
+        {
+            error_handle("Accept Error");
+        }
     }
-
-    // 发送数据
-    char message[] = "Test_Net_Server: Hello!";
-    write(client_socket, message, sizeof(message));
     
-    // 关闭socket
-    close(client_socket);
-    close(server_socket);
+    
+    char message[128];
+    while(1)
+    {
+        // int str_len;
+        int str_len = read(client_socket, message, sizeof(message) - 1);
+        if(str_len == -1)
+        {
+            // str_len = read(client_socket, message, sizeof(message) - 1);
+            // error_handle("Read Error");
+        }
+        else
+            printf("Message From Client: %s\n", message);
+
+        // 关闭socket
+        if(!strcmp(message, "close"))
+        {
+            close(client_socket);
+            close(server_socket);
+            break;
+        }
+    }
+    
     return 0;
     
 }
