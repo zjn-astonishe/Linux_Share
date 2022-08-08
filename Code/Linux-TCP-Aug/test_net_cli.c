@@ -65,14 +65,6 @@ int main(int argc, char *argv[])
     res = pthread_create(&id, NULL, read_thread, NULL);
     assert(res == 0);
 
-    // char message[128];
-    // int str_len = read(client_socket, message, sizeof(message) - 1);
-    // if(str_len == -1)
-    // {
-    //     error_handle("Read Error");
-    // }
-    // printf("Message From Server: %s\n", message);
-    // 发送数据
     while (!is_close)
         ;
     close(client_socket);

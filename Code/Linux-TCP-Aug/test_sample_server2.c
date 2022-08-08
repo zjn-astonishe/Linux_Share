@@ -132,6 +132,7 @@ void read_child_proc(int sig)
     client_num--;
     printf("remove proc id : %d \n", pid);
 }
+
 /**出错处理函数**/
 void error_handling(char *message)
 {
