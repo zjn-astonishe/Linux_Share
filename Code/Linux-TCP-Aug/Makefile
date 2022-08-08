@@ -14,8 +14,8 @@
 
 
 all : 
-	g++ test_net_ser.cpp -o test_net_ser
-	g++ test_net_cli.cpp -o test_net_cli
+	gcc test_sample_server2.c -o test_sample_server2
+	gcc test_net_cli.c -o test_net_cli -lpthread
 
 clean :
-	rm -rf test_net_cli test_net_ser
+	rm -rf test_net_cli test_sample_server2
