@@ -1,0 +1,55 @@
+<mxfile host="65bd71144e">
+    <diagram id="TQsavpC0Fd3S4abRPh8f" name="第 1 页">
+        <mxGraphModel dx="1118" dy="782" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="14" value="" style="edgeStyle=none;html=1;fontSize=20;" edge="1" parent="1" source="2" target="6">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="2" value="&lt;font style=&quot;font-size: 20px&quot;&gt;应用软件&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="240" y="120" width="360" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" value="" style="edgeStyle=none;html=1;fontSize=20;" edge="1" parent="1" source="3" target="10">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="16" value="" style="group" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="240" y="240" width="360" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="16">
+                    <mxGeometry width="360" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="设备驱动" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;" vertex="1" parent="16">
+                    <mxGeometry x="130" y="10" width="100" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="&lt;font style=&quot;font-size: 20px&quot;&gt;SerialSend&lt;br&gt;SerialRecv&lt;br&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="16">
+                    <mxGeometry x="10" y="70" width="110" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" value="&lt;font style=&quot;font-size: 20px&quot;&gt;LightOn&lt;br&gt;LightOff&lt;br&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="16">
+                    <mxGeometry x="125" y="70" width="110" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" value="&lt;font style=&quot;font-size: 20px&quot;&gt;FlashWr&lt;br&gt;FlashRd&lt;br&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="16">
+                    <mxGeometry x="240" y="70" width="110" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="17" value="" style="group" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="240" y="440" width="360" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="17">
+                    <mxGeometry width="360" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="硬件" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;" vertex="1" parent="17">
+                    <mxGeometry x="130" y="10" width="100" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="11" value="&lt;font style=&quot;font-size: 20px&quot;&gt;串口&lt;br&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="17">
+                    <mxGeometry x="10" y="50" width="110" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="12" value="&lt;font style=&quot;font-size: 20px&quot;&gt;LED&lt;br&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="17">
+                    <mxGeometry x="125" y="50" width="110" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="13" value="&lt;font style=&quot;font-size: 20px&quot;&gt;Flash&lt;br&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="17">
+                    <mxGeometry x="240" y="50" width="110" height="60" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
