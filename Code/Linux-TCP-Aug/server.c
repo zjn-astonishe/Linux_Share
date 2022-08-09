@@ -70,6 +70,7 @@ int main(int argc, char *argv[])
     {
         error_handling("listen() error");
     }
+    printf("Server opened successfully.\n");
     //通过循环来不断的提供服务
     while (1)
     {
@@ -84,10 +85,11 @@ int main(int argc, char *argv[])
         else
         {
             client_num++;
-            printf("new client connected...............\n");
+            //创建新的进程
+            
         }
-        //创建新的进程
         pid = fork();
+            
         //检查是否创建成功，此处为如果创建失败
         if (pid == -1)
         {
@@ -102,9 +104,10 @@ int main(int argc, char *argv[])
             //不断的向客户端发送读取到的数据，直到读取完毕
             while ((str_len = read(client_socket, buff, BUFF_SIZE)) != 0)
             {
-                printf("Message received from client: ");
+                printf("Message received from client %d: ", getpid());
                 puts(buff);
                 write(client_socket, buff, str_len);
+                memset(&buff, 0, sizeof(buff));
             }
             //发送完毕之后关闭客户端交互socket
             close(client_socket);
@@ -114,6 +117,8 @@ int main(int argc, char *argv[])
         }
         else
         {
+            printf("new client %d connected...............\n", pid);
+            printf("Client num: %d\n", client_num);
             close(client_socket); // 主进程只负责监听连接，不负责和客户端进行交互，所以关闭。
         }
         // printf("client num: %d\n", client_num);
@@ -131,6 +136,7 @@ void read_child_proc(int sig)
     pid = waitpid(-1, &status, WNOHANG);
     client_num--;
     printf("remove proc id : %d \n", pid);
+    printf("Client num: %d\n", client_num);
 }
 
 /**出错处理函数**/
@@ -148,7 +154,7 @@ void sig_handler()
     if (!client_num)
     {
         close(server_socket);
-        printf("Close Server\n");
+        printf("No client connected to the server for a period of time, close Server\n");
         exit(0);
     }
     else

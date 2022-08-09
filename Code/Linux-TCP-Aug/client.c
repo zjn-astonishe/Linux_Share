@@ -8,6 +8,8 @@
 #include <assert.h>
 #include <stdbool.h>
 
+#define SERVER_REPLY 1
+
 void error_handle(char *message);
 void *read_thread();
 void *write_thread();
@@ -43,13 +45,13 @@ int main(int argc, char *argv[])
     pthread_mutex_init(&is_close_lock, NULL);
     pthread_mutex_init(&printf_lock, NULL);
     pthread_cond_init(&cond, NULL);
-
     if (connect(client_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1)
     {
         error_handle("Connect Error");
     }
     else
     {
+
         pthread_mutex_lock(&is_connect_lock);
         is_connect = true;
         pthread_mutex_unlock(&is_connect_lock);
@@ -57,7 +59,6 @@ int main(int argc, char *argv[])
         is_close = false;
         pthread_mutex_unlock(&is_close_lock);
     }
-
     pthread_t id, id1;
     int res;
     res = pthread_create(&id1, NULL, write_thread, NULL);
@@ -84,7 +85,7 @@ void *write_thread()
 
     while (is_connect)
     {
-        printf("Input contect: ");
+        printf("Input content: \n");
         fgets(message, 128, stdin);
         message[strlen(message) - 1] = '\0';
         // printf("%s\n", message);
@@ -95,8 +96,16 @@ void *write_thread()
             pthread_mutex_lock(&is_connect_lock);
             is_connect = false;
             pthread_mutex_unlock(&is_connect_lock);
+#if (!SERVER_REPLY)
+            pthread_mutex_lock(&is_close_lock);
+            is_close = true;
+            pthread_mutex_unlock(&is_close_lock);
+#endif
         }
+        memset(&message, 0, sizeof(message));
+#if (SERVER_REPLY)
         pthread_cond_wait(&cond, &printf_lock);
+#endif
     }
 }
 
@@ -107,13 +116,23 @@ void *read_thread()
     pthread_mutex_lock(&is_close_lock);
     is_close = false;
     pthread_mutex_unlock(&is_close_lock);
+#if (SERVER_REPLY)
     do
-    {        
-        if((str_len = read(client_socket, message, 128)) == 0)
+    {
+        if ((str_len = read(client_socket, message, 128)) == 0)
             error_handle("Read Message From Server Error\n");
         printf("Message from server: %s\n", message);
         pthread_cond_signal(&cond);
-    }while (is_connect);
+    } while (is_connect);
+#else
+    while (is_connect)
+    {
+        if ((str_len = read(client_socket, message, 128)) == 0)
+            error_handle("Read Message From Server Error\n");
+        printf("Message from server: %s\n", message);
+        printf("Input content: \n");
+    }
+#endif
     // printf("Thread close\n");
     pthread_mutex_lock(&is_close_lock);
     is_close = true;

@@ -1,6 +1,6 @@
 make --dry-run --always-make --keep-going --print-directory
 make: Entering directory '/mnt/Linux_Share/Code/Linux-TCP-Aug'
-gcc test_sample_server2.c -o test_sample_server2
-gcc test_net_cli.c -o test_net_cli -lpthread
+gcc server.c -o server
+gcc client.c -o client -lpthread
 make: Leaving directory '/mnt/Linux_Share/Code/Linux-TCP-Aug'
  

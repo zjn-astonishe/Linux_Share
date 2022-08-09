@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Mon Aug  8 16:03:04 2022
+# Make data base, printed on Tue Aug  9 13:35:36 2022
 
 # Variables
 
@@ -35,7 +35,7 @@ CURDIR := /mnt/Linux_Share/Code/Linux-TCP-Aug
 # makefile
 SHELL = /bin/sh
 # environment
-VSCODE_NLS_CONFIG = {"locale":"zh-cn","availableLanguages":{"*":"zh-cn"},"_languagePackId":"1d735750dbb1b9066c7513078396ba0f.zh-cn","_translationsConfigFile":"/root/.vscode-server/data/clp/1d735750dbb1b9066c7513078396ba0f.zh-cn/tcf.json","_cacheRoot":"/root/.vscode-server/data/clp/1d735750dbb1b9066c7513078396ba0f.zh-cn","_resolvedLanguagePackCoreLocation":"/root/.vscode-server/data/clp/1d735750dbb1b9066c7513078396ba0f.zh-cn/da76f93349a72022ca4670c1b84860304616aaa2","_corruptedFile":"/root/.vscode-server/data/clp/1d735750dbb1b9066c7513078396ba0f.zh-cn/corrupted.info","_languagePackSupport":true}
+VSCODE_NLS_CONFIG = {"locale":"zh-cn","availableLanguages":{"*":"zh-cn"},"_languagePackId":"e1243840abbb4e31a890d397033a9abf.zh-cn","_translationsConfigFile":"/root/.vscode-server/data/clp/e1243840abbb4e31a890d397033a9abf.zh-cn/tcf.json","_cacheRoot":"/root/.vscode-server/data/clp/e1243840abbb4e31a890d397033a9abf.zh-cn","_resolvedLanguagePackCoreLocation":"/root/.vscode-server/data/clp/e1243840abbb4e31a890d397033a9abf.zh-cn/da76f93349a72022ca4670c1b84860304616aaa2","_corruptedFile":"/root/.vscode-server/data/clp/e1243840abbb4e31a890d397033a9abf.zh-cn/corrupted.info","_languagePackSupport":true}
 # environment
 _ = /usr/bin/make
 # makefile (from 'Makefile', line 1)
@@ -55,7 +55,7 @@ LC_NAME = en_US.UTF-8
 # environment
 VSCODE_CWD = /root
 # environment
-SSH_CONNECTION = 192.168.112.1 60461 192.168.112.130 22
+SSH_CONNECTION = 192.168.112.1 51394 192.168.112.130 22
 # environment
 PATH = /root/.vscode-server/bin/da76f93349a72022ca4670c1b84860304616aaa2/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
 # environment
@@ -63,7 +63,7 @@ XDG_RUNTIME_DIR = /run/user/0
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/0/vscode-ipc-139142ef-f7b5-43aa-9ede-6f5c77afe5a3.sock
+VSCODE_IPC_HOOK_CLI = /run/user/0/vscode-ipc-8c17ab22-a0ba-4777-8276-b5c90cf4bf0d.sock
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell archives jobserver output-sync check-symlink load
 # environment
@@ -101,7 +101,7 @@ MAKECMDGOALS := all
 # environment
 SHLVL = 1
 # environment
-XDG_SESSION_ID = 25
+XDG_SESSION_ID = 4
 # environment
 USER = root
 # environment
@@ -114,8 +114,6 @@ LC_MONETARY = en_US.UTF-8
 LC_TELEPHONE = en_US.UTF-8
 # default
 MAKE_COMMAND := make
-# environment
-OLDPWD = /root/.vscode-server/bin/da76f93349a72022ca4670c1b84860304616aaa2
 # default
 .VARIABLES := 
 # automatic
@@ -125,7 +123,7 @@ MAKEFLAGS = pqrR
 # environment
 MFLAGS = -pqrR
 # environment
-SSH_CLIENT = 192.168.112.1 60461 22
+SSH_CLIENT = 192.168.112.1 51394 22
 # automatic
 +D = $(patsubst %/,%,$(dir $+))
 # environment
@@ -163,7 +161,7 @@ LANG = C
 # environment
 MOTD_SHOWN = pam
 # variable set hash-table stats:
-# Load=76/1024=7%, Rehash=0, Collisions=13/104=12%
+# Load=75/1024=7%, Rehash=0, Collisions=13/103=13%
 
 # Pattern-specific Variable Values
 
@@ -171,9 +169,9 @@ MOTD_SHOWN = pam
 
 # Directories
 
-# . (device 53, inode 5910974510932198): 30 files, no impossibilities.
+# . (device 55, inode 5910974510932198): 8 files, no impossibilities.
 
-# 30 files, no impossibilities in 1 directories.
+# 8 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -206,9 +204,9 @@ all:
 # ? := 
 # variable set hash-table stats:
 # Load=8/32=25%, Rehash=0, Collisions=1/11=9%
-#  recipe to execute (from 'Makefile', line 17):
-	gcc test_sample_server2.c -o test_sample_server2
-	gcc test_net_cli.c -o test_net_cli -lpthread
+#  recipe to execute (from 'Makefile', line 2):
+	gcc server.c -o server
+	gcc client.c -o client -lpthread
 
 # Not a target:
 .SUFFIXES:
@@ -219,7 +217,7 @@ all:
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-08-08 14:07:46.1918231
+#  Last modified 2022-08-09 10:55:00.0718802
 #  File has been updated.
 #  Successfully updated.
 
@@ -233,8 +231,8 @@ clean:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 21):
-	rm -rf test_net_cli test_sample_server2
+#  recipe to execute (from 'Makefile', line 6):
+	rm -rf client server
 
 # files hash-table stats:
 # Load=5/1024=0%, Rehash=0, Collisions=0/17=0%
@@ -244,12 +242,12 @@ clean:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 36 / storage = 407 B / avg = 11 B
-# current buf: size = 8162 B / used = 407 B / count = 36 / avg = 11 B
+# strcache buffers: 1 (0) / strings = 14 / storage = 115 B / avg = 8 B
+# current buf: size = 8162 B / used = 115 B / count = 14 / avg = 8 B
 
-# strcache performance: lookups = 44 / hit rate = 18%
+# strcache performance: lookups = 22 / hit rate = 36%
 # hash-table stats:
-# Load=36/8192=0%, Rehash=0, Collisions=1/44=2%
-# Finished Make data base on Mon Aug  8 16:03:04 2022
+# Load=14/8192=0%, Rehash=0, Collisions=1/22=5%
+# Finished Make data base on Tue Aug  9 13:35:36 2022
 
  
