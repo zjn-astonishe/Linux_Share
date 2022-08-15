@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Mon Aug 15 10:50:24 2022
+# Make data base, printed on Mon Aug 15 10:57:57 2022
 
 # Variables
 
@@ -31,15 +31,15 @@ XDG_SESSION_TYPE = tty
 # default
 MAKE_VERSION := 4.2.1
 # makefile
-CURDIR := /mnt/Linux_Share/Code/Linux-TCP-Aug
+CURDIR := /mnt/Linux_Share
 # makefile
 SHELL = /bin/sh
 # environment
 VSCODE_NLS_CONFIG = {"locale":"zh-cn","availableLanguages":{"*":"zh-cn"},"_languagePackId":"08bdb29c43b4c03defdaaecc51ad48b6.zh-cn","_translationsConfigFile":"/root/.vscode-server/data/clp/08bdb29c43b4c03defdaaecc51ad48b6.zh-cn/tcf.json","_cacheRoot":"/root/.vscode-server/data/clp/08bdb29c43b4c03defdaaecc51ad48b6.zh-cn","_resolvedLanguagePackCoreLocation":"/root/.vscode-server/data/clp/08bdb29c43b4c03defdaaecc51ad48b6.zh-cn/da76f93349a72022ca4670c1b84860304616aaa2","_corruptedFile":"/root/.vscode-server/data/clp/08bdb29c43b4c03defdaaecc51ad48b6.zh-cn/corrupted.info","_languagePackSupport":true}
 # environment
 _ = /usr/bin/make
-# makefile (from 'Makefile', line 1)
-MAKEFILE_LIST :=  Makefile
+# makefile
+MAKEFILE_LIST := 
 # 'override' directive
 GNUMAKEFLAGS := 
 # environment
@@ -63,7 +63,7 @@ XDG_RUNTIME_DIR = /run/user/0
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/0/vscode-ipc-fe5d40de-c59e-47b7-af71-f16ab7ce75b5.sock
+VSCODE_IPC_HOOK_CLI = /run/user/0/vscode-ipc-6d71fc08-3a3a-4a4f-a527-e21bc847f79c.sock
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell archives jobserver output-sync check-symlink load
 # environment
@@ -71,7 +71,7 @@ LS_COLORS =
 # automatic
 %F = $(notdir $%)
 # environment
-PWD = /mnt/Linux_Share/Code/Linux-TCP-Aug
+PWD = /mnt/Linux_Share
 # default
 .LOADED := 
 # automatic
@@ -85,7 +85,7 @@ LESSCLOSE = /usr/bin/lesspipe %s %s
 # environment
 LOGNAME = root
 # environment
-APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = true
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
 # automatic
 +F = $(notdir $+)
 # environment
@@ -107,7 +107,7 @@ USER = root
 # environment
 LC_MONETARY = en_US.UTF-8
 # makefile
-.DEFAULT_GOAL := all
+.DEFAULT_GOAL := 
 # automatic
 %D = $(patsubst %/,%,$(dir $%))
 # environment
@@ -161,7 +161,7 @@ LANG = C
 # environment
 MOTD_SHOWN = pam
 # variable set hash-table stats:
-# Load=75/1024=7%, Rehash=0, Collisions=13/103=13%
+# Load=75/1024=7%, Rehash=0, Collisions=13/97=13%
 
 # Pattern-specific Variable Values
 
@@ -169,9 +169,9 @@ MOTD_SHOWN = pam
 
 # Directories
 
-# . (device 54, inode 5910974510932198): 9 files, no impossibilities.
+# . (device 54, inode 2251799813693571): 8 files, no impossibilities.
 
-# 9 files, no impossibilities in 1 directories.
+# 8 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -179,47 +179,26 @@ MOTD_SHOWN = pam
 
 # Files
 
+# Not a target:
 all:
 #  Command line target.
-#  Implicit rule search has not been done.
-#  Implicit/static pattern stem: ''
+#  Implicit rule search has been done.
 #  File does not exist.
-#  File has been updated.
-#  Needs to be updated (-q is set).
-# automatic
-# @ := all
-# automatic
-# % := 
-# automatic
-# * := 
-# automatic
-# + := 
-# automatic
-# | := 
-# automatic
-# < := 
-# automatic
-# ^ := 
-# automatic
-# ? := 
-# variable set hash-table stats:
-# Load=8/32=25%, Rehash=0, Collisions=1/11=9%
-#  recipe to execute (from 'Makefile', line 2):
-	gcc server.c -o server
-	gcc client.c -o client -lpthread
-
-# Not a target:
-.SUFFIXES:
-#  Implicit rule search has not been done.
-#  Modification time never checked.
 #  File has not been updated.
 
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-08-09 10:55:00.0718802
+#  File does not exist.
 #  File has been updated.
-#  Successfully updated.
+#  Failed to be updated.
+
+# Not a target:
+makefile:
+#  Implicit rule search has been done.
+#  File does not exist.
+#  File has been updated.
+#  Failed to be updated.
 
 # Not a target:
 .DEFAULT:
@@ -227,27 +206,29 @@ Makefile:
 #  Modification time never checked.
 #  File has not been updated.
 
-clean:
-#  Implicit rule search has not been done.
-#  Modification time never checked.
-#  File has not been updated.
-#  recipe to execute (from 'Makefile', line 6):
-	rm -rf client server
+# Not a target:
+GNUmakefile:
+#  Implicit rule search has been done.
+#  File does not exist.
+#  File has been updated.
+#  Failed to be updated.
 
 # files hash-table stats:
-# Load=5/1024=0%, Rehash=0, Collisions=0/17=0%
+# Load=6/1024=1%, Rehash=0, Collisions=0/15=0%
 # VPATH Search Paths
 
 # No 'vpath' search paths.
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 15 / storage = 122 B / avg = 8 B
-# current buf: size = 8162 B / used = 122 B / count = 15 / avg = 8 B
+# strcache buffers: 1 (0) / strings = 16 / storage = 134 B / avg = 8 B
+# current buf: size = 8162 B / used = 134 B / count = 16 / avg = 8 B
 
-# strcache performance: lookups = 23 / hit rate = 34%
+# strcache performance: lookups = 19 / hit rate = 15%
 # hash-table stats:
-# Load=15/8192=0%, Rehash=0, Collisions=1/23=4%
-# Finished Make data base on Mon Aug 15 10:50:24 2022
+# Load=16/8192=0%, Rehash=0, Collisions=1/19=5%
+# Finished Make data base on Mon Aug 15 10:57:57 2022
 
  
+make: *** No rule to make target 'all'.  Stop.
+
