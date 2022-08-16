@@ -1,91 +1,101 @@
 <mxfile host="65bd71144e">
     <diagram id="TQsavpC0Fd3S4abRPh8f" name="第 1 页">
-        <mxGraphModel dx="690" dy="867" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="430" dy="447" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="17" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="280" y="160" width="240" height="160" as="geometry"/>
-                </mxCell>
-                <mxCell id="18" value="&lt;font style=&quot;font-size: 20px&quot;&gt;/sys/bus/platform&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
-                    <mxGeometry x="315" y="160" width="170" height="40" as="geometry"/>
-                </mxCell>
-                <mxCell id="19" value="" style="ellipse;whiteSpace=wrap;html=1;fontSize=20;" vertex="1" parent="1">
-                    <mxGeometry x="280" y="200" width="240" height="120" as="geometry"/>
-                </mxCell>
-                <mxCell id="20" value="&lt;span style=&quot;font-size: 15px&quot;&gt;管理链表&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
-                    <mxGeometry x="315" y="200" width="170" height="40" as="geometry"/>
-                </mxCell>
-                <mxCell id="32" style="edgeStyle=none;html=1;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=0.4;entryY=0.1;entryDx=0;entryDy=0;entryPerimeter=0;fontSize=25;" edge="1" parent="1" source="21" target="25">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="21" value="驱动链表" style="ellipse;whiteSpace=wrap;html=1;fontSize=15;" vertex="1" parent="1">
-                    <mxGeometry x="400" y="225" width="120" height="76.8" as="geometry"/>
-                </mxCell>
-                <mxCell id="31" style="edgeStyle=none;html=1;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=0.625;entryY=0.2;entryDx=0;entryDy=0;entryPerimeter=0;fontSize=25;" edge="1" parent="1" source="23" target="26">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="23" value="设备链表" style="ellipse;whiteSpace=wrap;html=1;fontSize=15;" vertex="1" parent="1">
-                    <mxGeometry x="280.62" y="225" width="117.19" height="75" as="geometry"/>
-                </mxCell>
-                <mxCell id="30" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=25;" edge="1" parent="1" source="25" target="28">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="25" value="取出驱动的&lt;br&gt;注册信息" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;fontSize=15;" vertex="1" parent="1">
-                    <mxGeometry x="440" y="360" width="160" height="120" as="geometry"/>
-                </mxCell>
-                <mxCell id="29" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=25;" edge="1" parent="1" source="26" target="28">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="26" value="取出设备的&lt;br&gt;注册信息" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;fontSize=15;" vertex="1" parent="1">
-                    <mxGeometry x="200" y="360" width="160" height="120" as="geometry"/>
-                </mxCell>
-                <mxCell id="39" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0;entryDx=0;entryDy=0;fontSize=20;" edge="1" parent="1" source="28" target="34">
-                    <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="28" value="&lt;font style=&quot;font-size: 25px&quot;&gt;.match&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=15;" vertex="1" parent="1">
-                    <mxGeometry x="320" y="480" width="160" height="40" as="geometry"/>
-                </mxCell>
-                <mxCell id="35" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=20;" edge="1" parent="1" source="33" target="23">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="200" y="300"/>
-                        </Array>
+                <mxCell id="50" value="Interface1, Interface2..." style="html=1;verticalAlign=bottom;labelBackgroundColor=none;startArrow=oval;startFill=0;startSize=8;endArrow=none;" edge="1" parent="1">
+                    <mxGeometry x="-1" y="3" relative="1" as="geometry">
+                        <mxPoint x="90" y="670" as="sourcePoint"/>
+                        <mxPoint x="250" y="670" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="33" value="&lt;font style=&quot;font-size: 20px&quot;&gt;Devices&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=25;" vertex="1" parent="1">
-                    <mxGeometry x="140" y="560" width="120" height="80" as="geometry"/>
+                <mxCell id="52" value="&lt;b&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;I2C总线&lt;/font&gt;&lt;/b&gt;" style="strokeWidth=2;strokeColor=#000000;dashed=0;align=center;html=1;fontSize=8;shape=mxgraph.eip.messageChannel;direction=east;rotation=0;fillColor=#FFFFFF;" vertex="1" parent="1">
+                    <mxGeometry x="158.97" y="230" width="320" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="36" style="edgeStyle=none;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;fontSize=20;" edge="1" parent="1" source="34" target="21">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="600" y="300"/>
-                        </Array>
+                <mxCell id="76" value="" style="group" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="240" width="160" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="48" value="" style="sketch=0;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;fillColor=#000000;aspect=fixed;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;shape=mxgraph.vvd.cpu;" vertex="1" parent="76">
+                    <mxGeometry width="160" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="71" value="&lt;font size=&quot;1&quot;&gt;&lt;b style=&quot;font-size: 15px&quot;&gt;XXX-CPU&lt;/b&gt;&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="76">
+                    <mxGeometry x="38.46" y="40" width="81.54" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="49" value="&lt;b&gt;&lt;font style=&quot;font-size: 10px&quot;&gt;xxx_01_i2c&lt;br&gt;控制器&lt;/font&gt;&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=4;fillColor=none;" vertex="1" parent="76">
+                    <mxGeometry x="49.23000000000002" y="80" width="60" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="77" value="&lt;b&gt;i2c_algorithm&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="320" y="200" width="71.54" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="83" value="" style="endArrow=classic;startArrow=classic;html=1;fontSize=10;strokeColor=#000000;exitX=0;exitY=0;exitDx=160;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="52">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="330" y="230" as="sourcePoint"/>
+                        <mxPoint x="318.97333333333336" y="200" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="45" style="edgeStyle=none;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;fontSize=20;startArrow=none;" edge="1" parent="1" source="46" target="33">
+                <mxCell id="84" value="" style="endArrow=classic;startArrow=classic;html=1;fontSize=10;strokeColor=#000000;entryX=0;entryY=1;entryDx=40;entryDy=0;entryPerimeter=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="105" target="52">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="180" y="280" as="sourcePoint"/>
+                        <mxPoint x="380" y="180" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="85" value="" style="endArrow=classic;startArrow=classic;html=1;fontSize=10;strokeColor=#000000;entryX=0;entryY=1;entryDx=160;entryDy=0;entryPerimeter=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="100" target="52">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="318.97" y="300" as="sourcePoint"/>
+                        <mxPoint x="208.97000000000003" y="260" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="86" value="" style="endArrow=classic;startArrow=classic;html=1;fontSize=10;strokeColor=#000000;entryX=0;entryY=1;entryDx=280;entryDy=0;entryPerimeter=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="103" target="52">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="439.2299999999999" y="300" as="sourcePoint"/>
+                        <mxPoint x="218.97000000000003" y="270" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="87" value="&lt;b&gt;i2c_driver&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="190" y="260" width="71.54" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="88" value="&lt;b&gt;i2c_driver&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="310" y="260" width="71.54" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="89" value="&lt;b&gt;i2c_driver&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="430" y="260" width="71.54" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="99" value="" style="group" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="279.48" y="296" width="80.52" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="100" value="" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#999999;shape=mxgraph.mscae.enterprise.device" vertex="1" parent="99">
+                    <mxGeometry x="20.755005000000015" y="4" width="37.47603034593751" height="19.4883153125" as="geometry"/>
+                </mxCell>
+                <mxCell id="106" value="i2c_client_b" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1" vertex="1" parent="99">
+                    <mxGeometry x="-0.5099999999999909" width="80" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="102" value="" style="group" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="400" y="296" width="80" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="103" value="" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#999999;shape=mxgraph.mscae.enterprise.device" vertex="1" parent="102">
+                    <mxGeometry x="20.77000000000001" y="4" width="38.46" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="107" value="i2c_client_c" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1" vertex="1" parent="102">
+                    <mxGeometry width="80" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="104" value="" style="group" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="160" y="296" width="80" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="105" value="" style="sketch=0;aspect=fixed;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;fillColor=#999999;shape=mxgraph.mscae.enterprise.device" vertex="1" parent="104">
+                    <mxGeometry x="20.620968703427735" y="4" width="37.23400928558123" height="19.36245932687531" as="geometry"/>
+                </mxCell>
+                <mxCell id="90" value="i2c_client_a" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1" vertex="1" parent="104">
+                    <mxGeometry x="-0.7599999999999909" width="80" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="75" value="xxx_01_i2c_adapter" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1" vertex="1" parent="1">
+                    <mxGeometry x="280" y="168" width="80" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="108" value="" style="rounded=0;whiteSpace=wrap;html=1;fontSize=15;strokeColor=#000000;strokeWidth=2;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="260" y="160" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="109" value="" style="edgeStyle=none;html=1;fontSize=15;strokeColor=#000000;" edge="1" parent="1" source="49" target="108">
                     <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="34" value="&lt;font style=&quot;font-size: 20px&quot;&gt;Drivers&lt;/font&gt;" style="ellipse;whiteSpace=wrap;html=1;fontSize=25;" vertex="1" parent="1">
-                    <mxGeometry x="540" y="560" width="120" height="80" as="geometry"/>
-                </mxCell>
-                <mxCell id="37" value="调用device_add注册进入设备链表" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;" vertex="1" parent="1">
-                    <mxGeometry x="100" y="240" width="180" height="140" as="geometry"/>
-                </mxCell>
-                <mxCell id="38" value="调用driver_register注册进入驱动链表" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;" vertex="1" parent="1">
-                    <mxGeometry x="520" y="240" width="180" height="140" as="geometry"/>
-                </mxCell>
-                <mxCell id="40" value="&lt;font style=&quot;font-size: 15px&quot;&gt;匹配结果显示驱动支持设备&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;" vertex="1" parent="1">
-                    <mxGeometry x="440" y="520" width="100" height="40" as="geometry"/>
-                </mxCell>
-                <mxCell id="46" value="调用.probe接口驱动" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;" vertex="1" parent="1">
-                    <mxGeometry x="308.91" y="585" width="182.19" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="47" value="" style="edgeStyle=none;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;fontSize=20;endArrow=none;" edge="1" parent="1" source="34" target="46">
-                    <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="540" y="600" as="sourcePoint"/>
-                        <mxPoint x="260" y="600" as="targetPoint"/>
-                    </mxGeometry>
                 </mxCell>
             </root>
         </mxGraphModel>
