@@ -8,7 +8,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Fri Aug 19 10:00:52 2022
+# Make data base, printed on Mon Aug 22 09:52:46 2022
 
 # Variables
 
@@ -37,7 +37,7 @@ CURDIR := /mnt/Linux_Share
 # makefile
 SHELL = /bin/sh
 # environment
-VSCODE_NLS_CONFIG = {"locale":"zh-cn","availableLanguages":{"*":"zh-cn"},"_languagePackId":"cc0490d1397af23dc5bf44a96fe15dbb.zh-cn","_translationsConfigFile":"/root/.vscode-server/data/clp/cc0490d1397af23dc5bf44a96fe15dbb.zh-cn/tcf.json","_cacheRoot":"/root/.vscode-server/data/clp/cc0490d1397af23dc5bf44a96fe15dbb.zh-cn","_resolvedLanguagePackCoreLocation":"/root/.vscode-server/data/clp/cc0490d1397af23dc5bf44a96fe15dbb.zh-cn/da76f93349a72022ca4670c1b84860304616aaa2","_corruptedFile":"/root/.vscode-server/data/clp/cc0490d1397af23dc5bf44a96fe15dbb.zh-cn/corrupted.info","_languagePackSupport":true}
+VSCODE_NLS_CONFIG = {"locale":"zh-cn","availableLanguages":{"*":"zh-cn"},"_languagePackId":"cc0490d1397af23dc5bf44a96fe15dbb.zh-cn","_translationsConfigFile":"/root/.vscode-server/data/clp/cc0490d1397af23dc5bf44a96fe15dbb.zh-cn/tcf.json","_cacheRoot":"/root/.vscode-server/data/clp/cc0490d1397af23dc5bf44a96fe15dbb.zh-cn","_resolvedLanguagePackCoreLocation":"/root/.vscode-server/data/clp/cc0490d1397af23dc5bf44a96fe15dbb.zh-cn/e4503b30fc78200f846c62cf8091b76ff5547662","_corruptedFile":"/root/.vscode-server/data/clp/cc0490d1397af23dc5bf44a96fe15dbb.zh-cn/corrupted.info","_languagePackSupport":true}
 # environment
 _ = /usr/bin/make
 # makefile
@@ -57,15 +57,15 @@ LC_NAME = en_US.UTF-8
 # environment
 VSCODE_CWD = /root
 # environment
-SSH_CONNECTION = 192.168.112.1 57928 192.168.112.130 22
+SSH_CONNECTION = 192.168.112.1 60807 192.168.112.130 22
 # environment
-PATH = /root/.vscode-server/bin/da76f93349a72022ca4670c1b84860304616aaa2/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+PATH = /root/.vscode-server/bin/e4503b30fc78200f846c62cf8091b76ff5547662/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
 # environment
 XDG_RUNTIME_DIR = /run/user/0
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/0/vscode-ipc-6548b8aa-4c50-44fe-b478-55ebfccbd547.sock
+VSCODE_IPC_HOOK_CLI = /run/user/0/vscode-ipc-ebc9d65f-b71b-4b20-bba5-a192566b5c6c.sock
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell archives jobserver output-sync check-symlink load
 # environment
@@ -103,7 +103,7 @@ MAKECMDGOALS := all
 # environment
 SHLVL = 1
 # environment
-XDG_SESSION_ID = 2
+XDG_SESSION_ID = 5
 # environment
 USER = root
 # environment
@@ -116,6 +116,8 @@ LC_MONETARY = en_US.UTF-8
 LC_TELEPHONE = en_US.UTF-8
 # default
 MAKE_COMMAND := make
+# environment
+OLDPWD = /root/.vscode-server/bin/e4503b30fc78200f846c62cf8091b76ff5547662
 # default
 .VARIABLES := 
 # automatic
@@ -125,13 +127,13 @@ MAKEFLAGS = pqrR
 # environment
 MFLAGS = -pqrR
 # environment
-SSH_CLIENT = 192.168.112.1 57928 22
+SSH_CLIENT = 192.168.112.1 60807 22
 # automatic
 +D = $(patsubst %/,%,$(dir $+))
 # environment
 LC_PAPER = en_US.UTF-8
 # environment
-BROWSER = /root/.vscode-server/bin/da76f93349a72022ca4670c1b84860304616aaa2/bin/helpers/browser.sh
+BROWSER = /root/.vscode-server/bin/e4503b30fc78200f846c62cf8091b76ff5547662/bin/helpers/browser.sh
 # environment
 VSCODE_HANDLES_SIGPIPE = true
 # default
@@ -163,7 +165,7 @@ LANG = C
 # environment
 MOTD_SHOWN = pam
 # variable set hash-table stats:
-# Load=75/1024=7%, Rehash=0, Collisions=13/97=13%
+# Load=76/1024=7%, Rehash=0, Collisions=13/98=13%
 
 # Pattern-specific Variable Values
 
@@ -171,7 +173,7 @@ MOTD_SHOWN = pam
 
 # Directories
 
-# . (device 53, inode 2251799813693571): 8 files, no impossibilities.
+# . (device 55, inode 2251799813693571): 8 files, no impossibilities.
 
 # 8 files, no impossibilities in 1 directories.
 
@@ -229,6 +231,6 @@ GNUmakefile:
 # strcache performance: lookups = 19 / hit rate = 15%
 # hash-table stats:
 # Load=16/8192=0%, Rehash=0, Collisions=1/19=5%
-# Finished Make data base on Fri Aug 19 10:00:52 2022
+# Finished Make data base on Mon Aug 22 09:52:46 2022
 
  
