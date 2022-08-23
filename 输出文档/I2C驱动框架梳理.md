@@ -13,6 +13,10 @@
     - [3.2.1. 定义](#321-定义)
     - [3.2.2. 关联](#322-关联)
 - [4. Linux中I2C驱动框架代码流程分析](#4-linux中i2c驱动框架代码流程分析)
+  - [4.1. Linux中I2C驱动框架](#41-linux中i2c驱动框架)
+  - [注册I2C子系统核心层(主要是注册I2C总线)](#注册i2c子系统核心层主要是注册i2c总线)
+  - [注册i2c_adapter并将其添加到I2C总线](#注册i2c_adapter并将其添加到i2c总线)
+  - [I2C设备驱动开发](#i2c设备驱动开发)
 - [5. 结语](#5-结语)
 - [6. 参考资料](#6-参考资料)
 
@@ -136,6 +140,20 @@ I2C设备驱动(客户驱动)是对I2C从设备的软件实现。对应软件架
 ![关联](https://github.com/zjn-astonishe/Linux_Share/blob/master/Image/image/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/%E5%85%B3%E9%94%AE%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B9%8B%E9%97%B4%E5%85%B3%E8%81%94.png?raw=true)
 
 # 4. Linux中I2C驱动框架代码流程分析
+
+## 4.1. Linux中I2C驱动框架
+
+![Linux中I2C驱动框架](https://github.com/zjn-astonishe/Linux_Share/blob/master/Image/image/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/%E5%9B%BE%E7%89%872.png?raw=true)
+
+每一个i2c_adapter对应一条实际的I2C总线。I2C总线上挂载着I2C设备实物，每个I2C设备对应一个i2c_client，一个i2c_client只能匹配一个i2c_driver。一般来说，一个i2c_driver可以匹配多个i2c_client，会给每个I2C设备注册设备节点(以字符设备节点为例)，向用户层提供标准操作接口，如`write()/read()/ioctl()`。通过调用i2c_adapter提供的通信方法i2c_algorithm，完成对I2C设备的操作。
+
+根据上图可以总结出I2C驱动框架的构建流程如下：
+
+## 注册I2C子系统核心层(主要是注册I2C总线)
+
+## 注册i2c_adapter并将其添加到I2C总线
+
+## I2C设备驱动开发
 
 # 5. 结语
 
