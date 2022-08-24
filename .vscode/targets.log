@@ -8,7 +8,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Tue Aug 23 09:01:41 2022
+# Make data base, printed on Wed Aug 24 09:10:48 2022
 
 # Variables
 
@@ -57,7 +57,7 @@ LC_NAME = en_US.UTF-8
 # environment
 VSCODE_CWD = /root
 # environment
-SSH_CONNECTION = 192.168.112.1 60807 192.168.112.130 22
+SSH_CONNECTION = 192.168.112.1 64510 192.168.112.130 22
 # environment
 PATH = /root/.vscode-server/bin/e4503b30fc78200f846c62cf8091b76ff5547662/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
 # environment
@@ -65,7 +65,7 @@ XDG_RUNTIME_DIR = /run/user/0
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/0/vscode-ipc-cf87bc36-7119-4acf-aeff-cbbe37aae2c1.sock
+VSCODE_IPC_HOOK_CLI = /run/user/0/vscode-ipc-7f19ef80-1f6f-489b-8199-51cd208cd07a.sock
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell archives jobserver output-sync check-symlink load
 # environment
@@ -103,7 +103,7 @@ MAKECMDGOALS := all
 # environment
 SHLVL = 1
 # environment
-XDG_SESSION_ID = 5
+XDG_SESSION_ID = 4
 # environment
 USER = root
 # environment
@@ -116,8 +116,6 @@ LC_MONETARY = en_US.UTF-8
 LC_TELEPHONE = en_US.UTF-8
 # default
 MAKE_COMMAND := make
-# environment
-OLDPWD = /root/.vscode-server/bin/e4503b30fc78200f846c62cf8091b76ff5547662
 # default
 .VARIABLES := 
 # automatic
@@ -127,7 +125,7 @@ MAKEFLAGS = pqrR
 # environment
 MFLAGS = -pqrR
 # environment
-SSH_CLIENT = 192.168.112.1 60807 22
+SSH_CLIENT = 192.168.112.1 64510 22
 # automatic
 +D = $(patsubst %/,%,$(dir $+))
 # environment
@@ -165,7 +163,7 @@ LANG = C
 # environment
 MOTD_SHOWN = pam
 # variable set hash-table stats:
-# Load=76/1024=7%, Rehash=0, Collisions=13/98=13%
+# Load=75/1024=7%, Rehash=0, Collisions=13/97=13%
 
 # Pattern-specific Variable Values
 
@@ -173,9 +171,9 @@ MOTD_SHOWN = pam
 
 # Directories
 
-# . (device 55, inode 2251799813693571): 8 files, no impossibilities.
+# . (device 55, inode 2251799813693571): 9 files, no impossibilities.
 
-# 8 files, no impossibilities in 1 directories.
+# 9 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -225,12 +223,12 @@ GNUmakefile:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 16 / storage = 134 B / avg = 8 B
-# current buf: size = 8162 B / used = 134 B / count = 16 / avg = 8 B
+# strcache buffers: 1 (0) / strings = 17 / storage = 147 B / avg = 8 B
+# current buf: size = 8162 B / used = 147 B / count = 17 / avg = 8 B
 
-# strcache performance: lookups = 19 / hit rate = 15%
+# strcache performance: lookups = 20 / hit rate = 15%
 # hash-table stats:
-# Load=16/8192=0%, Rehash=0, Collisions=1/19=5%
-# Finished Make data base on Tue Aug 23 09:01:41 2022
+# Load=17/8192=0%, Rehash=0, Collisions=1/20=5%
+# Finished Make data base on Wed Aug 24 09:10:48 2022
 
  
