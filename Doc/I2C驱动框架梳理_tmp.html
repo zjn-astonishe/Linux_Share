@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>I2C驱动框架梳理.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<ul>
+<li><a href="#1-%E5%89%8D%E8%A8%80%E5%AF%BC%E5%BC%95">1. 前言导引</a></li>
+<li><a href="#2-linux%E4%B8%ADi2c%E9%A9%B1%E5%8A%A8%E6%9E%B6%E6%9E%84%E6%80%BB%E8%A7%88">2. Linux中I2C驱动架构总览</a>
+<ul>
+<li><a href="#21-i2c%E6%A0%B8%E5%BF%83">2.1. I2C核心</a></li>
+<li><a href="#22-i2c%E6%80%BB%E7%BA%BF%E9%A9%B1%E5%8A%A8">2.2. I2C总线驱动</a></li>
+<li><a href="#23-i2c%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8">2.3. I2C设备驱动</a></li>
+</ul>
+</li>
+<li><a href="#3-linux%E4%B8%ADi2c%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84%E6%80%BB%E8%A7%88">3. Linux中I2C驱动框架代码结构总览</a>
+<ul>
+<li><a href="#31-%E5%85%B3%E9%94%AE%E6%96%87%E4%BB%B6%E8%B7%AF%E5%BE%84">3.1. 关键文件路径</a>
+<ul>
+<li><a href="#311-%E6%A0%B8%E5%BF%83%E5%B1%82%E5%92%8C%E6%80%BB%E7%BA%BF%E9%A9%B1%E5%8A%A8">3.1.1. 核心层和总线驱动</a></li>
+<li><a href="#312-%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E4%BB%A5gt1x%E8%A7%A6%E6%91%B8%E5%B1%8F%E4%B8%BA%E4%BE%8B">3.1.2. 设备驱动(以gt1x触摸屏为例)</a></li>
+<li><a href="#313-%E8%AE%BE%E5%A4%87%E6%A0%91%E6%96%87%E4%BB%B6%E4%BB%A5tb-rk3568x%E4%B8%BA%E4%BE%8B">3.1.3. 设备树文件(以TB-RK3568X为例)</a></li>
+<li><a href="#314-%E9%87%8D%E8%A6%81%E7%9A%84%E5%A4%B4%E6%96%87%E4%BB%B6">3.1.4. 重要的头文件</a></li>
+</ul>
+</li>
+<li><a href="#32-%E5%85%B3%E9%94%AE%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84">3.2. 关键数据结构</a>
+<ul>
+<li><a href="#321-%E5%AE%9A%E4%B9%89">3.2.1. 定义</a></li>
+<li><a href="#322-%E5%85%B3%E8%81%94">3.2.2. 关联</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#4-linux%E4%B8%ADi2c%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6%E4%BB%A3%E7%A0%81%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90">4. Linux中I2C驱动框架代码流程分析</a>
+<ul>
+<li><a href="#41-%E6%B3%A8%E5%86%8Ci2c%E5%AD%90%E7%B3%BB%E7%BB%9F%E6%A0%B8%E5%BF%83%E5%B1%82%E4%B8%BB%E8%A6%81%E6%98%AF%E6%B3%A8%E5%86%8Ci2c%E6%80%BB%E7%BA%BF">4.1. 注册I2C子系统核心层(主要是注册I2C总线)</a></li>
+<li><a href="#42-%E6%B3%A8%E5%86%8Ci2c_adapter%E5%B9%B6%E5%B0%86%E5%85%B6%E6%B7%BB%E5%8A%A0%E5%88%B0i2c%E6%80%BB%E7%BA%BF">4.2. 注册i2c_adapter并将其添加到I2C总线</a>
+<ul>
+<li><a href="#421-%E6%B3%A8%E5%86%8Ci2c_adapter%E5%88%B0platform%E6%80%BB%E7%BA%BF">4.2.1. 注册i2c_adapter到platform总线</a></li>
+<li><a href="#422-%E5%B0%86i2c_adapter%E6%B7%BB%E5%8A%A0%E5%88%B0i2c%E6%80%BB%E7%BA%BF">4.2.2. 将i2c_adapter添加到I2C总线</a></li>
+</ul>
+</li>
+<li><a href="#43-i2c%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91">4.3. I2C设备驱动开发</a>
+<ul>
+<li><a href="#431-%E5%B0%86i2c%E6%8E%A7%E5%88%B6%E5%99%A8%E6%9A%B4%E9%9C%B2%E7%BB%99%E5%BA%94%E7%94%A8%E7%9A%84%E6%96%B9%E5%BC%8F">4.3.1. 将I2C控制器暴露给应用的方式</a></li>
+<li><a href="#432-%E5%B0%86i2c%E6%8E%A7%E5%88%B6%E5%99%A8%E6%8A%BD%E8%B1%A1%E6%88%90%E5%85%AC%E5%85%B1%E9%A9%B1%E5%8A%A8%E7%9A%84%E6%96%B9%E5%BC%8F">4.3.2. 将I2C控制器抽象成公共驱动的方式</a></li>
+</ul>
+</li>
+<li><a href="#44-%E9%87%8D%E7%82%B9%E5%88%86%E6%9E%90">4.4. 重点分析</a>
+<ul>
+<li><a href="#441-%E8%AE%BE%E5%A4%87%E6%A0%91%E5%8C%B9%E9%85%8D%E6%9C%BA%E5%88%B6">4.4.1. 设备树匹配机制</a></li>
+<li><a href="#442-match%E5%87%BD%E6%95%B0%E5%92%8Cprobe%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E5%85%B3%E7%B3%BB">4.4.2. .match()函数和.probe()函数调用关系</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#5-%E7%BB%93%E8%AF%AD">5. 结语</a></li>
+<li><a href="#6-%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99">6. 参考资料</a></li>
+</ul>
+<div style="page-break-after: always;"></div>
+<h1 id="1-%E5%89%8D%E8%A8%80%E5%AF%BC%E5%BC%95">1. 前言导引</h1>
+<p>I2C总线是Philips公司开发的一种简单、双向二线制同步串行总线，只需要两根线即可传送信息。I2C结合了SPI和UART的优点，可以像SPI一样将多个从机连接到单个主机，也可以使用多个主机控制一个或多个从机。</p>
+<p>由于本文重点是梳理Linux中I2C驱动框架，所以对于I2C的通信协议、物理总线等基础内容不做过多赘述，读者可自行百度了解。</p>
+<p>接下来，本文将从I2C驱动架构总览、I2C驱动框架代码结构总览、I2C驱动框架代码流程分析三个部分对I2C驱动框架进行梳理。</p>
+<ul>
+<li>I2C驱动架构总览主要介绍Linux中I2C驱动的整体架构，讲解各个组成部分的功能和相互联系。</li>
+<li>I2C驱动框架代码结构总览主要介绍Linux中I2C驱动框架的重要文件路径和关键数据结构。</li>
+<li>I2C驱动框架代码流程分析主要介绍Linux中I2C驱动框架的实现细节。</li>
+</ul>
+<div style="page-break-after: always;"></div>
+<h1 id="2-linux%E4%B8%ADi2c%E9%A9%B1%E5%8A%A8%E6%9E%B6%E6%9E%84%E6%80%BB%E8%A7%88">2. Linux中I2C驱动架构总览</h1>
+<p>下图展示了Linux中I2C驱动架构的基本架构：</p>
+<center>
+<img src="https://github.com/zjn-astonishe/Linux_Share/blob/master/Image/image/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/Linux%E5%86%85%E6%A0%B8%E9%87%8CI2C%E5%AD%90%E7%B3%BB%E7%BB%9F%E8%BD%AF%E4%BB%B6%E6%A1%86%E6%9E%B6%E5%9B%BE.png?raw=true" width="80%">
+</center>
+<p>对于南向开发而言，只需关注架构的内核空间部分。在《Linux设备驱动开发详解》一书第15章《Linux I2C核心、总线与设备驱动》中，将Linux内核里的I2C子系统分为核心、总线驱动和设备驱动三部分。</p>
+<h2 id="21-i2c%E6%A0%B8%E5%BF%83">2.1. I2C核心</h2>
+<p>I2C核心提供了I2C总线驱动和I2C设备驱动注册和注销的方法，I2C通信方法上层的与具体适配器无关的代码，以及探测设备、检测设备地址的上层代码。I2C总线驱动和设备驱动之间依赖于I2C核心作为纽带。</p>
+<h2 id="22-i2c%E6%80%BB%E7%BA%BF%E9%A9%B1%E5%8A%A8">2.2. I2C总线驱动</h2>
+<p>I2C总线驱动是对SoC中I2C控制器的软件实现(i2c_algorithm)。提供I2C控制器与从设备间完成数据通信的能力(i2c_adapter)。对应软件架构图中硬件抽象层部分和硬件实现控制层。</p>
+<h2 id="23-i2c%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8">2.3. I2C设备驱动</h2>
+<p>I2C设备驱动(客户驱动)是对I2C从设备的软件实现。对应软件架构图中的驱动层。</p>
+<div style="page-break-after: always;"></div>
+<h1 id="3-linux%E4%B8%ADi2c%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84%E6%80%BB%E8%A7%88">3. Linux中I2C驱动框架代码结构总览</h1>
+<h2 id="31-%E5%85%B3%E9%94%AE%E6%96%87%E4%BB%B6%E8%B7%AF%E5%BE%84">3.1. 关键文件路径</h2>
+<h3 id="311-%E6%A0%B8%E5%BF%83%E5%B1%82%E5%92%8C%E6%80%BB%E7%BA%BF%E9%A9%B1%E5%8A%A8">3.1.1. 核心层和总线驱动</h3>
+<pre>
+~/Documents/OpenHarmony/out/kernel/src_tmp/linux-5.10/drivers/i2c/
+&#x251C;&#x2500;&#x2500; algos               // i2c_algorithm&#x76F8;&#x5173;&#xFF0C;&#x901A;&#x4FE1;&#x7B97;&#x6CD5;
+&#x251C;&#x2500;&#x2500; busses              // i2c_adapter&#x76F8;&#x5173;&#xFF0C;&#x5DF2;&#x7ECF;&#x7F16;&#x5199;&#x597D;&#x7684;&#x5404;&#x79CD;&#x5411;i2c&#x6838;&#x5FC3;&#x5C42;&#x6CE8;&#x518C;&#x7684;&#x9002;&#x914D;&#x5668;&#xFF0C;&#x4E0E;I2C&#x603B;&#x7EBF;&#x9A71;&#x52A8;&#x76F8;&#x5173;
+&#x251C;&#x2500;&#x2500; muxes
+&#x251C;&#x2500;&#x2500; i2c-boardinfo.c     // i2c&#x9759;&#x6001;&#x58F0;&#x660E;i2c&#x8BBE;&#x5907;&#x7684;&#x6587;&#x4EF6;&#xFF0C;&#x8BBE;&#x5907;&#x6811;&#x51FA;&#x73B0;&#x540E;&#x5DF2;&#x7ECF;&#x4E0D;&#x592A;&#x4F7F;&#x7528;&#x3002;
+&#x251C;&#x2500;&#x2500; i2c-core-acpi.c     // &#x4EE5;&#x4E0B;i2c-core-*.c&#x5BF9;&#x5E94;&#x8001;&#x7248;&#x672C;&#x7684;i2c-core.c&#xFF0C;&#x5BF9;&#x5E94;I2C&#x6838;&#x5FC3;&#xFF0C;&#x7531;&#x5185;&#x6838;&#x5F00;&#x53D1;&#x8005;&#x5B9E;&#x73B0;&#x7684;&#xFF0C;&#x4E0E;&#x786C;&#x4EF6;&#x65E0;&#x5173;&#x7684;&#x4EE3;&#x7801;&#x3002;&#x4E3B;&#x8981;&#x4E3A;&#x5176;&#x4ED6;&#x5404;&#x90E8;&#x5206;&#x63D0;&#x4F9B;&#x64CD;&#x4F5C;&#x63A5;&#x53E3;&#xFF0C;&#x5728;&#x5176;&#x5185;&#x90E8;&#x901A;&#x8FC7;&#x7ED3;&#x6784;&#x4F53;&#x91CC;&#x9762;&#x7684;&#x51FD;&#x6570;&#x6307;&#x9488;&#x8C03;&#x7528;&#x786C;&#x4EF6;&#x76F8;&#x5173;&#x4FE1;&#x606F;&#xFF0C;&#x5373;&#x7ED3;&#x6784;&#x4F53;&#x91CC;&#x9762;&#x51FD;&#x6570;&#x6307;&#x9488;&#x7684;&#x51FD;&#x6570;&#x5728;&#x8BBE;&#x5907;&#x52A0;&#x8F7D;&#x7684;&#x65F6;&#x5019;&#x521D;&#x59CB;&#x5316;&#x3002;
+&#x251C;&#x2500;&#x2500; i2c-core-base.c
+&#x251C;&#x2500;&#x2500; i2c-core.h
+&#x251C;&#x2500;&#x2500; i2c-core-of.c
+&#x251C;&#x2500;&#x2500; i2c-core-slave.c
+&#x251C;&#x2500;&#x2500; i2c-core-smbus.c
+&#x251C;&#x2500;&#x2500; i2c-dev.c           // &#x4E3A;i2c_adapter&#x5B9E;&#x73B0;&#x4E86;&#x8BBE;&#x5907;&#x6587;&#x4EF6;&#x529F;&#x80FD;&#xFF0C;&#x53EA;&#x662F;&#x63D0;&#x4F9B;&#x4E86;&#x901A;&#x7528;&#x7684;read()&#x3001;write()&#x548C;ioctl()&#x7B49;&#x63A5;&#x53E3;&#xFF0C;&#x4F9B;&#x5E94;&#x7528;&#x5C42;&#x76F4;&#x63A5;&#x63A7;&#x5236;I2C&#x63A7;&#x5236;&#x5668;&#x8BBF;&#x95EE;I2C&#x8BBE;&#x5907;&#x7684;&#x5B58;&#x50A8;&#x7A7A;&#x95F4;&#x6216;&#x5BC4;&#x5B58;&#x5668;&#x3002;
+&#x251C;&#x2500;&#x2500; i2c-mux.c
+&#x251C;&#x2500;&#x2500; i2c-slave-eeprom.c
+&#x251C;&#x2500;&#x2500; i2c-slave-testunit.c
+&#x251C;&#x2500;&#x2500; i2c-smbus.c         // &#x5B9E;&#x73B0;smbus&#x534F;&#x8BAE;&#x7684;&#x6269;&#x5C55;&#x6587;&#x4EF6;
+&#x251C;&#x2500;&#x2500; i2c-stub.c
+&#x251C;&#x2500;&#x2500; Kconfig
+&#x2514;&#x2500;&#x2500; Makefile
+</pre>
+<h3 id="312-%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E4%BB%A5gt1x%E8%A7%A6%E6%91%B8%E5%B1%8F%E4%B8%BA%E4%BE%8B">3.1.2. 设备驱动(以gt1x触摸屏为例)</h3>
+<pre>
+~/Documents/OpenHarmony/out/kernel/src_tmp/linux-5.10/drivers/input/touchscreen/gt1x/
+&#x251C;&#x2500;&#x2500; gt1x.c              // gt1x&#x89E6;&#x6478;&#x5C4F;&#x8BBE;&#x5907;&#x9A71;&#x52A8;&#x4E3B;&#x8981;&#x4EE3;&#x7801;&#x4F4D;&#x7F6E;
+&#x251C;&#x2500;&#x2500; gt1x_cfg.h
+&#x251C;&#x2500;&#x2500; gt1x_extents.c
+&#x251C;&#x2500;&#x2500; gt1x_firmware.h
+&#x251C;&#x2500;&#x2500; gt1x_generic.c      // gt1x&#x89E6;&#x6478;&#x5C4F;&#x8BBE;&#x5907;&#x9A71;&#x52A8;&#x4E3B;&#x8981;&#x4EE3;&#x7801;&#x4F4D;&#x7F6E;
+&#x251C;&#x2500;&#x2500; gt1x_generic.h
+&#x251C;&#x2500;&#x2500; gt1x.h
+&#x251C;&#x2500;&#x2500; gt1x_tools.c
+&#x251C;&#x2500;&#x2500; gt1x_update.c
+&#x251C;&#x2500;&#x2500; GT5688_Config_20170713_1080_1920.cfg
+&#x2514;&#x2500;&#x2500; Makefile
+</pre>
+<h3 id="313-%E8%AE%BE%E5%A4%87%E6%A0%91%E6%96%87%E4%BB%B6%E4%BB%A5tb-rk3568x%E4%B8%BA%E4%BE%8B">3.1.3. 设备树文件(以TB-RK3568X为例)</h3>
+<pre>
+~/Documents/OpenHarmony/out/kernel/src_tmp/linux-5.10/arch/arm64/boot/dts/rockchip/
+&#x251C;&#x2500;&#x2500; ...
+&#x251C;&#x2500;&#x2500; rk3568-toybrick-x0-linux.dts
+&#x251C;&#x2500;&#x2500; rk3568.dtsi
+&#x251C;&#x2500;&#x2500; rk3568-linux.dtsi
+&#x251C;&#x2500;&#x2500; rk3568-toybrick-mipi-tx0-beiqicloud.dtsi
+&#x251C;&#x2500;&#x2500; ...
+</pre>
+<h3 id="314-%E9%87%8D%E8%A6%81%E7%9A%84%E5%A4%B4%E6%96%87%E4%BB%B6">3.1.4. 重要的头文件</h3>
+<pre>
+~/Documents/OpenHarmony/out/kernel/src_tmp/linux-5.10/include/linux/
+&#x251C;&#x2500;&#x2500; ...
+&#x251C;&#x2500;&#x2500; device.h
+&#x251C;&#x2500;&#x2500; ...
+&#x251C;&#x2500;&#x2500; i2c.h
+&#x251C;&#x2500;&#x2500; of.h
+&#x251C;&#x2500;&#x2500; of_device.h
+&#x251C;&#x2500;&#x2500; ...
+</pre>
+<h2 id="32-%E5%85%B3%E9%94%AE%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84">3.2. 关键数据结构</h2>
+<h3 id="321-%E5%AE%9A%E4%B9%89">3.2.1. 定义</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">数据结构</th>
+<th style="text-align:center">文件路径</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center"><code>i2c_adapter</code></td>
+<td style="text-align:center"><code>/drivers/i2c/busses/i2c-core-base.c</code></td>
+<td style="text-align:center">用于识别物理I2Cs总线以及访问该总线所需的访问算法</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>i2c_algorithm</code></td>
+<td style="text-align:center"><code>/include/linux/i2c.h</code></td>
+<td style="text-align:center">I2C通信方法</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>i2c_msg</code></td>
+<td style="text-align:center"><code>/usr/include/linux/i2c.h</code></td>
+<td style="text-align:center">i2c_algorithm中通信函数的基本单位</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>i2c_driver</code></td>
+<td style="text-align:center"><code>/include/linux/i2c.h</code></td>
+<td style="text-align:center">I2C设备驱动</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>i2c_client</code></td>
+<td style="text-align:center"><code>/include/linux/i2c.h</code></td>
+<td style="text-align:center">I2C从机设备</td>
+</tr>
+<tr>
+<td style="text-align:center"><code>i2c_bus_type</code></td>
+<td style="text-align:center"><code>/drivers/i2c/i2c-core-base.c</code></td>
+<td style="text-align:center">I2C总线</td>
+</tr>
+</tbody>
+</table>
+<h3 id="322-%E5%85%B3%E8%81%94">3.2.2. 关联</h3>
+<p>下图解释了上述结构体之间的关联。在I2C设备驱动注册的过程中，会调用i2c_driver的匹配函数<code>match()</code>与i2c_client(在i2c_adapter注册过程中解析设备树信息生成)进行匹配，匹配成功则调用<code>probe()</code>函数完成驱动注册的收尾工作。设备驱动可通过i2c_adapter中提供的i2c_algorithm，构造i2c_msg与I2C设备通信，完成控制操作。</p>
+<center>
+<img src="https://github.com/zjn-astonishe/Linux_Share/blob/master/Image/image/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/%E5%85%B3%E9%94%AE%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B9%8B%E9%97%B4%E5%85%B3%E8%81%94.png?raw=true" width="40%">
+</center>
+<div style="page-break-after: always;"></div>
+<h1 id="4-linux%E4%B8%ADi2c%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6%E4%BB%A3%E7%A0%81%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90">4. Linux中I2C驱动框架代码流程分析</h1>
+<center>
+<img src="https://github.com/zjn-astonishe/Linux_Share/blob/master/Image/image/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/%E5%9B%BE%E7%89%872.png?raw=true" width="100%">
+</center>
+<p>每一个i2c_adapter对应一条实际的I2C总线。I2C总线上挂载着多个I2C设备实物，每个I2C设备对应一个i2c_client。一般来说，一个i2c_driver可以匹配多个i2c_client，而一个i2c_client只能匹配一个i2c_driver。i2c_driver会给每个I2C设备注册设备节点(以字符设备节点为例)，向用户层提供标准操作接口，如<code>write()/read()/ioctl()</code>。通过调用i2c_adapter提供的通信方法i2c_algorithm，完成对I2C设备的操作。</p>
+<p>根据上图展示的I2C驱动框架可以总结出构建流程如下：</p>
+<h2 id="41-%E6%B3%A8%E5%86%8Ci2c%E5%AD%90%E7%B3%BB%E7%BB%9F%E6%A0%B8%E5%BF%83%E5%B1%82%E4%B8%BB%E8%A6%81%E6%98%AF%E6%B3%A8%E5%86%8Ci2c%E6%80%BB%E7%BA%BF">4.1. 注册I2C子系统核心层(主要是注册I2C总线)</h2>
+<p>如果要在系统启动时便能享受到I2C总线的相关服务，就需要调用<code>i2c_init()</code>函数。该函数通过<code>postcore_initcall(i2c_init)</code>被放置在内核中的<code>initcall2.init</code>段处，这和驱动开发中调用<code>module_init()</code>类似。于是，在内核启动时，系统调用<code>do_initcall()</code>函数，根据指针数组<code>initcall_levels[2]</code>找到<code>__initcall2_start</code>指针。由<code>vmlinux.lds.h</code>可知，该指针指向<code>initcall2.init</code>段的起始地址，系统依次取出段中的每个函数指针并执行，从而使得系统能享受到I2C总线的相关服务。同样，编译进内核的驱动程序都通过这种方式完成启动并提供服务，具体可以查询“Linux的initcall机制”进行了解。</p>
+<pre class="hljs"><code><div><span class="hljs-comment">/* /drivers/i2c/i2c-core-base.c */</span>
+<span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> __init <span class="hljs-title">i2c_init</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span>
+</span>{
+	<span class="hljs-keyword">int</span> retval;
+	...
+	retval = bus_register(&amp;i2c_bus_type);       <span class="hljs-comment">// 注册I2C总线，成功返回值为0</span>
+	<span class="hljs-keyword">if</span> (retval)		<span class="hljs-comment">// 如果注册失败</span>
+		<span class="hljs-keyword">return</span> retval;
+	...
+	<span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+...
+}
+</div></code></pre>
+<p><code>i2c_init()</code>函数中，最重要的便是调用<code>bus_register(&amp;i2c_bus_type)</code>函数完成I2C总线的注册。</p>
+<p><code>i2c_bus_type</code>是一个<code>bus_type</code>结构体变量，它重载了<code>bus_type</code>结构体中的几个成员指针变量，其中最重要的是总线名称<code>.name</code>以及两个函数指针——<code>.match()</code>和<code>.probe()</code>。</p>
+<pre class="hljs"><code><div><span class="hljs-comment">/* /drivers/i2c/i2c-core-base.c */</span>
+<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">bus_type</span> <span class="hljs-title">i2c_bus_type</span> = {</span>
+	.name		= <span class="hljs-string">"i2c"</span>,
+	.match		= i2c_device_match,         <span class="hljs-comment">// 负责总线上的device和driver匹配</span>
+	.probe		= i2c_device_probe,         <span class="hljs-comment">// 在匹配成功后会执行以完成注册的收尾工作</span>
+	.<span class="hljs-built_in">remove</span>		= i2c_device_remove,
+	.<span class="hljs-built_in">shutdown</span>	= i2c_device_shutdown,
+};
+EXPORT_SYMBOL_GPL(i2c_bus_type);        <span class="hljs-comment">// 模块导出，可供其他模块使用</span>
+</div></code></pre>
+<p>当任何一个i2c_driver或者i2c_client注册到I2C总线时，I2C总线都会调用<code>i2c_device_match()</code>函数对i2c_driver和i2c_client进行匹配。</p>
+<pre class="hljs"><code><div><span class="hljs-comment">/* /drivers/i2c/i2c-core-base.c */</span>
+<span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> <span class="hljs-title">i2c_device_match</span><span class="hljs-params">(struct device *dev, struct device_driver *drv)</span>
+</span>{
+	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">i2c_client</span>	*<span class="hljs-title">client</span> = <span class="hljs-title">i2c_verify_client</span>(<span class="hljs-title">dev</span>);</span>
+	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">i2c_driver</span>	*<span class="hljs-title">driver</span>;</span>
+
+	<span class="hljs-comment">/* Attempt an OF style match */</span>
+	<span class="hljs-keyword">if</span> (i2c_of_match_device(drv-&gt;of_match_table, client))
+		<span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+	<span class="hljs-comment">/* Then ACPI style match */</span>
+	<span class="hljs-keyword">if</span> (acpi_driver_match_device(dev, drv))
+		<span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+	driver = to_i2c_driver(drv);                    <span class="hljs-comment">// 找到i2c_driver</span>
+
+	<span class="hljs-comment">/* Finally an I2C match */</span>
+	<span class="hljs-keyword">if</span> (i2c_match_id(driver-&gt;id_table, client))     <span class="hljs-comment">// 用i2c_driver的id_table和device匹配。驱动名多个，但设备名只有一个，说明一个驱动可以对应多个设备(尤其是同一类型)</span>
+		<span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;
+
+	<span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}
+</div></code></pre>
+<p><code>i2c_device_match()</code>函数提供了三种匹配方式，它们执行顺序的先后代表了匹配优先级的高低。</p>
+<ul>
+<li><code>i2c_of_match_device</code>是设备树的匹配方式，具有最高的优先级。</li>
+<li><code>acpi_driver_match_device</code>是acpi(高级设置与电源管理)的匹配方式。</li>
+<li><code>i2c_match_id</code>则是通过注册i2c_driver结构体变量时提供的id_table进行匹配。</li>
+</ul>
+<p>如今设备树匹配方式已经成为主流，后文将对其进行重点介绍。而acpi匹配方式使用较少且较复杂，所以下面只简单了解一下在设备树匹配方式产生之前，主要采用的匹配方式<code>i2c_match_id</code>。</p>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">const</span> struct i2c_device_id *<span class="hljs-title">i2c_match_id</span><span class="hljs-params">(<span class="hljs-keyword">const</span> struct i2c_device_id *id,
+						<span class="hljs-keyword">const</span> struct i2c_client *client)</span>
+</span>{
+	<span class="hljs-keyword">if</span> (!(id &amp;&amp; client))	<span class="hljs-comment">// 要求设备和驱动的设备号表都非空</span>
+		<span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;
+	<span class="hljs-comment">// 循环比对</span>
+	<span class="hljs-keyword">while</span> (id-&gt;name[<span class="hljs-number">0</span>]) {
+		<span class="hljs-keyword">if</span> (<span class="hljs-built_in">strcmp</span>(client-&gt;name, id-&gt;name) == <span class="hljs-number">0</span>)
+			<span class="hljs-keyword">return</span> id;
+		id++;
+	}
+	<span class="hljs-keyword">return</span> <span class="hljs-literal">NULL</span>;
+}
+</div></code></pre>
+<p>匹配成功后，I2C总线在后续会调用<code>i2c_device_probe()</code>函数完成相应注册的收尾工作。</p>
+<p>除了被重载的几个成员指针变量，<code>bus_type</code>结构体中还有一个关键成员变量<code>*p</code>。通过I2C驱动框架图可以知道，I2C总线上分别存储了i2c_driver链和i2c_client链来实现对驱动和设备的管理。<code>*p</code>是一个<code>subsys_private</code>结构体变量，所包含的成员<code>klist_devices</code>和<code>klist_drivers</code>分别对应了i2c_client链和i2c_driver链，在<code>bus_register()</code>中调用<code>klist_init()</code>函数进行初始化。</p>
+<pre class="hljs"><code><div><span class="hljs-comment">/* /include/linux/device/bus.h */</span>
+<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">bus_type</span> {</span>
+	<span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span>		*name;
+	...
+	<span class="hljs-keyword">int</span> (*match)(struct device *dev, struct device_driver *drv);
+	<span class="hljs-keyword">int</span> (*probe)(struct device *dev);
+	<span class="hljs-keyword">int</span> (*<span class="hljs-built_in">remove</span>)(struct device *dev);
+	<span class="hljs-keyword">void</span> (*<span class="hljs-built_in">shutdown</span>)(struct device *dev);
+	...
+	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">subsys_private</span> *<span class="hljs-title">p</span>;</span>
+	...
+};
+<span class="hljs-comment">/* /drivers/base/base.h */</span>
+<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">subsys_private</span> {</span>
+	...
+	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">klist</span> <span class="hljs-title">klist_devices</span>;</span>		<span class="hljs-comment">// i2c_client链(对于I2C总线来说)</span>
+	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">klist</span> <span class="hljs-title">klist_drivers</span>;</span>		<span class="hljs-comment">// i2c_driver链(对于I2C总线来说)</span>
+	...
+};
+<span class="hljs-comment">/* /include/linux/device/bus.c */</span>
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">bus_register</span><span class="hljs-params">(struct bus_type *bus)</span>
+</span>{
+	...
+	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">subsys_private</span> *<span class="hljs-title">priv</span>;</span>
+	...
+	klist_init(&amp;priv-&gt;klist_devices, klist_devices_get, klist_devices_put);		<span class="hljs-comment">// 初始化i2c_client链</span>
+	klist_init(&amp;priv-&gt;klist_drivers, <span class="hljs-literal">NULL</span>, <span class="hljs-literal">NULL</span>);	<span class="hljs-comment">// 初始化i2c_driver链</span>
+	...
+}
+</div></code></pre>
+<h2 id="42-%E6%B3%A8%E5%86%8Ci2cadapter%E5%B9%B6%E5%B0%86%E5%85%B6%E6%B7%BB%E5%8A%A0%E5%88%B0i2c%E6%80%BB%E7%BA%BF">4.2. 注册i2c_adapter并将其添加到I2C总线</h2>
+<p><code>i2c_adapter</code>在硬件上对应SoC的I2C控制器，在内核中被认为是一个设备，而其对应驱动即是总线驱动。它向接在I2C控制器上的I2C设备提供在I2C总线上通信的基础方法，通过操作SoC的I2C控制器相关的寄存器实现数据收发。</p>
+<h3 id="421-%E6%B3%A8%E5%86%8Ci2cadapter%E5%88%B0platform%E6%80%BB%E7%BA%BF">4.2.1. 注册i2c_adapter到platform总线</h3>
+<p>如果要在系统启动时便能享受到I2C总线的相关服务，就需要调用<code>i2c_init()</code>函数。该函数通过<code>postcore_initcall(i2c_init)</code>被放置在内核中的<code>initcall2.init</code>段处，这和驱动开发中调用<code>module_init()</code>类似。于是，在内核启动时，系统调用<code>do_initcall()</code>函数，根据指针数组<code>initcall_levels[2]</code>找到<code>__initcall2_start</code>指针。由<code>vmlinux.lds.h</code>可知，该指针指向<code>initcall2.init</code>段的起始地址，系统依次取出段中的每个函数指针并执行，从而使得系统能享受到I2C总线的相关服务。同样，编译进内核的驱动程序都通过这种方式完成启动并提供服务，具体可以查询“Linux的initcall机制”进行了解。</p>
+<p><code>i2c_adapter</code>一般通过两种方法注册：</p>
+<ul>
+<li>一种做法是为I2C适配器创建一个platform设备注册到<code>platform_bus_type</code>总线上与I2C适配器的platform驱动匹配，在驱动的probe函数中向I2C总线添加<code>i2c_adapter</code>和提供<code>i2c_algorithm</code>通信方法。</li>
+<li>另一种做法是I2C适配器作为pci设备注册到PCI总线上与I2C适配器的pci驱动匹配，在驱动的probe函数中向i2c_bus_type添加<code>i2c_adapter</code>和提供<code>i2c_algorithm</code>通信方法。</li>
+</ul>
+<p>以TB-RK3568X为例，RK平台采用的是第一种方法。总线驱动的文件存储在路径<code>/drivers/i2c/busses</code>中，RK平台的总线驱动文件为<code>i2c-rk3x.c</code>。</p>
+<p>结合4.1可知，编译进内核的驱动程序要在系统启动后为系统提供服务，则需事先将<code>init()</code>函数加入到内核的特定段中。驱动程序对应的<code>init()</code>函数是<code>module_init()</code>，对应放置的位置是内核中的<code>initcall6.init</code>段(据此，也可知内核是先注册总线，后注册驱动)。</p>
+<p>为了提高代码的重用性，消除多余的样板文件。当module_init和module_exit都不做任何特殊操作时，调用宏定义函数 <code>module_platform_driver</code> 替换 <code>module_init</code> 和 <code>module_exit</code> (实际还要调用一次宏定义函数 <code>module_driver</code> 才能完成替换)。</p>
+<pre class="hljs"><code><div><span class="hljs-comment">/* /include/linux/platform_device.h */</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> module_platform_driver(__platform_driver) \
+</span>
+    module_driver(__platform_driver, platform_driver_register, \
+            platform_driver_unregister)
+			
+<span class="hljs-comment">/* /include/linux/device/driver.h */</span>
+<span class="hljs-comment">/**
+ * @__driver: driver name
+ * @__register: register function for this driver type
+ * @__unregister: unregister function for this driver type
+ * @...: Additional arguments to be passed to __register and __unregister.
+ */</span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">define</span> module_driver(__driver, __register, __unregister, ...) \
+static int __init __driver##_init(void) \
+{ \
+</span>
+    <span class="hljs-keyword">return</span> __register(&amp;(__driver) , ##__VA_ARGS__); \
+
+} \
+module_init(__driver##_init); \
+<span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> __exit __driver##_exit(<span class="hljs-keyword">void</span>) \
+{ \
+
+    __unregister(&amp;(__driver) , ##__VA_ARGS__); \
+
+} \
+module_exit(__driver##_exit); 
+
+<span class="hljs-comment">/* /drivers/i2c/busses/i2c-rk3x.c */</span>
+module_platform_driver(rk3x_i2c_driver);	<span class="hljs-comment">// 注册i2c_adapter的platform_driver</span>
+</div></code></pre>
+<p><code>rk3x_i2c_driver</code>是一个<code>platform_driver</code>类型的结构体变量，重载了<code>*driver</code>结构体的部分变量(最重要的是匹配表<code>of_match_table</code>)和两个函数指针<code>.probe()</code>和<code>.remove()</code>。</p>
+<pre class="hljs"><code><div><span class="hljs-comment">/* /drivers/i2c/busses/i2c-rk3x.c */</span>
+<span class="hljs-keyword">static</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">platform_driver</span> <span class="hljs-title">rk3x_i2c_driver</span> = {</span>
+	.probe   = rk3x_i2c_probe,
+	.<span class="hljs-built_in">remove</span>  = rk3x_i2c_remove,
+	.driver  = {
+		.name  = <span class="hljs-string">"rk3x-i2c"</span>,
+		.of_match_table = rk3x_i2c_match,
+		.pm = &amp;rk3x_i2c_pm_ops,
+	},
+};
+</div></code></pre>
+<p><code>module_init()</code>调用<code>platform_driver_register(rk3x_i2c_driver)</code>向platform总线注册总线驱动。后续流程匹配和调用收尾工作与I2C总线类似，就不做赘述。</p>
+<pre class="hljs"><code><div><span class="hljs-comment">/* /drivers/i2c/busses/i2c-rk3x.c */</span>
+<span class="hljs-comment">/**
+ * @param pdev: 即i2c_adapter，相当于是挂载在platform总线上的platform_device。
+ */</span>
+<span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> <span class="hljs-title">rk3x_i2c_probe</span><span class="hljs-params">(struct platform_device *pdev)</span>
+</span>{
+    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">device_node</span> *<span class="hljs-title">np</span> = <span class="hljs-title">pdev</span>-&gt;<span class="hljs-title">dev</span>.<span class="hljs-title">of_node</span>;</span>	<span class="hljs-comment">// i2c_adapter对应的设备节点</span>
+    <span class="hljs-keyword">const</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">of_device_id</span> *<span class="hljs-title">match</span>;</span>	<span class="hljs-comment">// 匹配表</span>
+    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">rk3x_i2c</span> *<span class="hljs-title">i2c</span>;</span>	<span class="hljs-comment">// 声明一个rk3x_i2c的适配器结构体，是i2c_adapter的进一步封装，相当于面向对象中的继承</span>
+    ...
+    <span class="hljs-comment">/**
+     * 采用devm_kzalloc与kzalloc相比，优点在于不用考虑释放问题，由内核完成内存回收工作
+     * devm_kzalloc — Resource-managed kzalloc
+     * @param pdev: 申请内存的目标设备
+     * @param gftp: 申请内存的类型标志，标识内存分配器将要采取的行为。其中GFP_KERNEL最常用，五内存可用时可引起休眠。
+     * @return: 成功返回首地址，失败返回NULL
+     * 为适配器结构体申请内存，为后续实例化完成基础工作。
+     */</span>
+    i2c = devm_kzalloc(&amp;pdev-&gt;dev, <span class="hljs-keyword">sizeof</span>(struct rk3x_i2c), GFP_KERNEL); 
+    <span class="hljs-keyword">if</span> (!i2c)	<span class="hljs-comment">// 申请失败</span>
+        <span class="hljs-keyword">return</span> -ENOMEM; 
+	...
+    <span class="hljs-comment">// i2c_adapter部分成员初始化</span>
+    <span class="hljs-comment">// 名字</span>
+    strlcpy(i2c-&gt;adap.name, <span class="hljs-string">"rk3x-i2c"</span>, <span class="hljs-keyword">sizeof</span>(i2c-&gt;adap.name));
+    <span class="hljs-comment">// 拥有者</span>
+    i2c-&gt;adap.owner = THIS_MODULE;
+    <span class="hljs-comment">// 通信方法</span>
+    i2c-&gt;adap.algo = &amp;rk3x_i2c_algorithm;
+    i2c-&gt;adap.algo_data = i2c;
+    i2c-&gt;adap.retries = <span class="hljs-number">3</span>;
+    i2c-&gt;adap.dev.of_node = np;		
+    i2c-&gt;adap.dev.parent = &amp;pdev-&gt;dev;
+    i2c-&gt;dev = &amp;pdev-&gt;dev;
+	...
+    <span class="hljs-comment">// 向I2C总线添加i2c_adapter，重点</span>
+    ret = i2c_add_adapter(&amp;i2c-&gt;adap);
+    <span class="hljs-keyword">if</span> (ret &lt; <span class="hljs-number">0</span>)
+        <span class="hljs-keyword">goto</span> err_clk_notifier;
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+	...
+}
+</div></code></pre>
+<p>阅读注册收尾时被调用的<code>rk3x_i2c_probe()</code>函数源码可以知道，该函数负责将i2c_adapter和platform_device联系起来。并在对i2c_adapter各项参数进行配置后，将i2c_adapter添加到I2C总线。</p>
+<p>参数配置中比较重要的是<code>rk3x_i2c_algorithm</code>，因为每家芯片厂商SoC内部的I2C控制器是不一样的，所以 <code>i2c_algorithm</code> 中直接涉及硬件层面上的代码都是由芯片商提供。例如：对I2C控制器的寄存器操作。 <code>i2c_algorithm</code> 提供的通信函数控制适配器产生特定的访问信号，虽然不同的I2C总线控制器被抽象成不同的 <code>i2c_adapter</code> ，但是如果操作方式相同，则可以共享同一个 <code>i2c_algorithm</code> 。</p>
+<pre class="hljs"><code><div><span class="hljs-comment">/* /drivers/i2c/busses/i2c-rk3x.c */</span>
+<span class="hljs-keyword">static</span> <span class="hljs-keyword">const</span> <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">i2c_algorithm</span> <span class="hljs-title">rk3x_i2c_algorithm</span> = {</span>
+    .master_xfer		= rk3x_i2c_xfer,            <span class="hljs-comment">// 通信方法，如果不支持I2C访问，则为NULL</span>
+    .master_xfer_atomic	= rk3x_i2c_xfer_polling,            <span class="hljs-comment">// 通信方法，在atomic context环境下使用。比如在关机之前、所有中断都关闭的情况下，用来访问电源管理芯片</span>
+    .functionality		= rk3x_i2c_func,            <span class="hljs-comment">// 检测通信方法支持的功能或协议，设备驱动一般会调用这个回调来确认适配器支持的协议类型</span>
+}; 
+</div></code></pre>
+<h3 id="422-%E5%B0%86i2cadapter%E6%B7%BB%E5%8A%A0%E5%88%B0i2c%E6%80%BB%E7%BA%BF">4.2.2. 将i2c_adapter添加到I2C总线</h3>
+<p>4.2.1末尾提到：在<code>rk3x_i2c_probe()</code>的最后，调用了I2C核心层为总线驱动开放的添加适配器至I2C总线的接口函数<code>i2c_add_adapter()</code>。该函数的主要作用有两个：</p>
+<ul>
+<li>将对应的I2C总线的id分配给i2c_adapter。因为一个Soc内部通常会有多个I2C控制器，而所有I2C控制器实际都公用同一份总线驱动代码。</li>
+<li>解析由i2c_adapter控制的每一个从设备，并构建出i2c_client。设备驱动加载运行需要i2c_client才能继续。</li>
+</ul>
+<pre class="hljs"><code><div><span class="hljs-comment">/* /drivers/i2c/i2c-core-base.c */</span>
+<span class="hljs-comment">/**
+ * i2c_add_adapter - declare i2c adapter, use dynamic bus number
+ * @adapter: the adapter to add
+ * Context: can sleep
+ *
+ * This routine is used to declare an I2C adapter when its bus number
+ * doesn't matter or when its bus number is specified by an dt alias.
+ * Examples of bases when the bus number doesn't matter: I2C adapters
+ * dynamically added by USB links or PCI plugin cards.
+ *
+ * When this returns zero, a new bus number was allocated and stored
+ * in adap-&gt;nr, and the specified adapter became available for clients.
+ * Otherwise, a negative errno value is returned.
+ */</span>
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">i2c_add_adapter</span><span class="hljs-params">(struct i2c_adapter *adapter)</span>
+</span>{
+	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">device</span> *<span class="hljs-title">dev</span> = &amp;<span class="hljs-title">adapter</span>-&gt;<span class="hljs-title">dev</span>;</span>
+	<span class="hljs-keyword">int</span> id;
+    <span class="hljs-comment">// 对于在设备树定义的i2c适配器，则通过设备树获得总线号(在rk3x_i2c_probe中赋值dev-&gt;of_node)</span>
+	<span class="hljs-keyword">if</span> (dev-&gt;of_node) {
+        <span class="hljs-comment">// 获得总线号，因为总线驱动可以兼容多个同一平台的I2C控制器，一般会在dts里指定。</span>
+		id = of_alias_get_id(dev-&gt;of_node, <span class="hljs-string">"i2c"</span>);
+        <span class="hljs-comment">// 如果找到I2C总线号则直接注册</span>
+		<span class="hljs-keyword">if</span> (id &gt;= <span class="hljs-number">0</span>) {
+			adapter-&gt;nr = id;
+			<span class="hljs-keyword">return</span> __i2c_add_numbered_adapter(adapter);	<span class="hljs-comment">// 添加已明确总线号的I2C适配器</span>
+		}
+	}
+	mutex_lock(&amp;core_lock);
+    <span class="hljs-comment">// 为i2c_adapter绑定动态总线号(从i2c_adapter_idr中申请一个可用的总线号)</span>
+	id = idr_alloc(&amp;i2c_adapter_idr, adapter,
+		       __i2c_first_dynamic_bus_num, <span class="hljs-number">0</span>, GFP_KERNEL);
+	mutex_unlock(&amp;core_lock);
+	<span class="hljs-keyword">if</span> (WARN(id &lt; <span class="hljs-number">0</span>, <span class="hljs-string">"couldn't get idr"</span>))
+		<span class="hljs-keyword">return</span> id;
+	adapter-&gt;nr = id;
+	<span class="hljs-keyword">return</span> i2c_register_adapter(adapter);	<span class="hljs-comment">// 在I2C总线上注册i2c_adapter</span>
+}
+</div></code></pre>
+<p>在设备树中有一个叫做aliases的节点，在Linux内核启动的时候，会按如下流程解析这个节点，将节点内的信息加入到全局<code>aliases_lookup</code>链表中。</p>
+<pre>
+start_kernel
+	--&gt; setup_arch
+		--&gt; unflatten_device_tree
+			--&gt; of_alias_scan
+				--&gt; of_alias_add
+</pre>
+<p><code>i2c_add_adapter()</code>提供了两种为i2c_adapter分配id的方法。对于在设备树定义的i2c_adapter，调用<code>of_alias_get_id()</code>遍历<code>aliases_lookup</code>链表获得明确的I2C总线号，并调用<code>__i2c_add_numbered_adapter()</code>函数添加i2c_adapter。否则，从i2c_adapter_idr中申请一个可用的总线号供i2c_adapter添加。</p>
+<pre class="hljs"><code><div><span class="hljs-comment">/* /drivers/of/base.c */</span>
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">of_alias_get_id</span><span class="hljs-params">(struct device_node *np, <span class="hljs-keyword">const</span> <span class="hljs-keyword">char</span> *stem)</span>
+</span>{
+	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">alias_prop</span> *<span class="hljs-title">app</span>;</span>
+	<span class="hljs-keyword">int</span> id = -ENODEV;
+	mutex_lock(&amp;of_mutex);
+    <span class="hljs-comment">// 遍历链表aliases_lookup(成员为alias_prop)，逐一对比字符串stem。</span>
+	list_for_each_entry(app, &amp;aliases_lookup, link) {
+        <span class="hljs-comment">// 过滤掉dtsi中aliases节点内的非I2C节点</span>
+		<span class="hljs-keyword">if</span> (<span class="hljs-built_in">strcmp</span>(app-&gt;stem, stem) != <span class="hljs-number">0</span>)
+			<span class="hljs-keyword">continue</span>;
+        <span class="hljs-comment">// 如果字符串匹配且找到对应的device_node，则说明获得ID</span>
+		<span class="hljs-keyword">if</span> (np == app-&gt;np) {
+			id = app-&gt;id;
+			<span class="hljs-keyword">break</span>;
+		}
+	}
+	mutex_unlock(&amp;of_mutex);
+	<span class="hljs-keyword">return</span> id;
+}
+</div></code></pre>
+<p>无论i2c_adapter是如何获得id的，其最终都是调用<code>i2c_register_adapter</code>在I2C总线上注册i2c_adapter。</p>
+<pre class="hljs"><code><div><span class="hljs-comment">/* /drivers/i2c/i2c-core-base.c */</span>
+<span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">int</span> <span class="hljs-title">i2c_register_adapter</span><span class="hljs-params">(struct i2c_adapter *adap)</span>
+</span>{
+	...
+	<span class="hljs-comment">/* 如果adapter没有name和algo算法，则无法注册 */</span>
+	<span class="hljs-keyword">if</span> (WARN(!adap-&gt;name[<span class="hljs-number">0</span>], <span class="hljs-string">"i2c adapter has no name"</span>))
+		<span class="hljs-keyword">goto</span> out_list;
+	<span class="hljs-keyword">if</span> (!adap-&gt;algo) {
+		pr_err(<span class="hljs-string">"adapter '%s': no algo supplied!\n"</span>, adap-&gt;name);
+		<span class="hljs-keyword">goto</span> out_list;
+	}
+	...
+	<span class="hljs-comment">// 注册到I2C总线</span>
+	dev_set_name(&amp;adap-&gt;dev, <span class="hljs-string">"i2c-%d"</span>, adap-&gt;nr);
+	adap-&gt;dev.bus = &amp;i2c_bus_type;
+	adap-&gt;dev.type = &amp;i2c_adapter_type;
+
+	res = device_register(&amp;adap-&gt;dev);	<span class="hljs-comment">// 将adapter设备添加到I2C总线，生成i2c_client。</span>
+	<span class="hljs-keyword">if</span> (res) {
+		pr_err(<span class="hljs-string">"adapter '%s': can't register device (%d)\n"</span>, adap-&gt;name, res);
+		<span class="hljs-keyword">goto</span> out_list;
+	}
+	...
+	<span class="hljs-comment">/* create pre-declared device nodes */</span>
+    <span class="hljs-comment">// 构建从设备的软件抽象i2c_client，并与adapter建立联系</span>
+	of_i2c_register_devices(adap);
+	...
+	<span class="hljs-keyword">if</span> (adap-&gt;nr &lt; __i2c_first_dynamic_bus_num)
+		i2c_scan_static_board_info(adap);
+	<span class="hljs-comment">/* Notify drivers */</span>
+	mutex_lock(&amp;core_lock);
+	bus_for_each_drv(&amp;i2c_bus_type, <span class="hljs-literal">NULL</span>, adap, __process_new_adapter);		<span class="hljs-comment">// 匹配机制。遍历整个driver链表，进行i2c_client与i2c_driver的匹配工作</span>
+	mutex_unlock(&amp;core_lock);
+	<span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+	...
+out_list:
+	...
+}
+</div></code></pre>
+<p><code>i2c_register_adapter()</code>函数最重要的作用是解析由i2c_adapter控制的每一个从设备，并构建出i2c_client。进而完成i2c_driver和i2c_client的匹配。前者由函数<code>of_i2c_register_devices()</code>负责，后者依靠函数<code>bus_for_each_drv()</code>实现。</p>
+<pre class="hljs"><code><div><span class="hljs-comment">/* /drivers/i2c/i2c-core-of.c */</span>
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">of_i2c_register_devices</span><span class="hljs-params">(struct i2c_adapter *adap)</span>
+</span>{
+	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">device_node</span> *<span class="hljs-title">bus</span>, *<span class="hljs-title">node</span>;</span>
+    <span class="hljs-comment">// 构建i2c_client</span>
+	<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">i2c_client</span> *<span class="hljs-title">client</span>;</span>
+	<span class="hljs-comment">/* Only register child devices if the adapter has a node pointer set 设备树节点不为空 */</span>
+	<span class="hljs-keyword">if</span> (!adap-&gt;dev.of_node)
+		<span class="hljs-keyword">return</span>;
+	dev_dbg(&amp;adap-&gt;dev, <span class="hljs-string">"of_i2c: walking child nodes\n"</span>);
+    <span class="hljs-comment">// 查找设备树节点中名称有直接描述I2C总线的节点，为了缩小查找范围</span>
+	bus = of_get_child_by_name(adap-&gt;dev.of_node, <span class="hljs-string">"i2c-bus"</span>);
+    <span class="hljs-comment">// 没找到则从头开始遍历</span>
+	<span class="hljs-keyword">if</span> (!bus)
+		bus = of_node_get(adap-&gt;dev.of_node);
+    <span class="hljs-comment">// 遍历每一个子节点，调用of_i2c_register_device解析设备树节点内容</span>
+	for_each_available_child_of_node(bus, node) {
+		<span class="hljs-keyword">if</span> (of_node_test_and_set_flag(node, OF_POPULATED))
+			<span class="hljs-keyword">continue</span>;
+
+		client = of_i2c_register_device(adap, node);
+		<span class="hljs-keyword">if</span> (IS_ERR(client)) {
+			dev_err(&amp;adap-&gt;dev,
+				 <span class="hljs-string">"Failed to create I2C device for %pOF\n"</span>,
+				 node);
+			of_node_clear_flag(node, OF_POPULATED);
+		}
+	}
+	of_node_put(bus);
+}
+</div></code></pre>
+<h2 id="43-i2c%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91">4.3. I2C设备驱动开发</h2>
+<p>由I2C驱动框架图可知，实现I2C设备驱动通常有两条路径：</p>
+<h3 id="431-%E5%B0%86i2c%E6%8E%A7%E5%88%B6%E5%99%A8%E6%9A%B4%E9%9C%B2%E7%BB%99%E5%BA%94%E7%94%A8%E7%9A%84%E6%96%B9%E5%BC%8F">4.3.1. 将I2C控制器暴露给应用的方式</h3>
+<p>该方式采用标准的 <code>file_operations</code> 字符设备的形式，将 <code>i2c_adapter</code> 设备化，在<code>/dev</code>目录下创建<code>i2c-n(n=0, 1, 2...)</code>设备节点。所实现的驱动可看作是一种&quot; <code>i2c_driver</code> 成员函数 + 字符设备驱动&quot;的虚拟驱动，需要由应用层通过 <code>read()</code> 、 <code>write()</code> 函数根据芯片手册直接对I2C控制器进行配置时序等操作，以实现对从设备的控制。这种方式是把对硬件的具体操作放在应用层去实现，适合用来快速测试一款I2C设备的功能，或者在 <code>i2c_driver</code> 工作不正常的时候排查具体是设备驱动工作问题还是主机驱动工作问题。并不能作为主流的开发方式。详细可见 <code>.../OpenHarmony/out/kernel/src_tmp/linux-5.10/drivers/i2c/i2c-dev.c</code> 。</p>
+<h3 id="432-%E5%B0%86i2c%E6%8E%A7%E5%88%B6%E5%99%A8%E6%8A%BD%E8%B1%A1%E6%88%90%E5%85%AC%E5%85%B1%E9%A9%B1%E5%8A%A8%E7%9A%84%E6%96%B9%E5%BC%8F">4.3.2. 将I2C控制器抽象成公共驱动的方式</h3>
+<p>该方式是把所有代码都放在驱动层实现，直接向应用层提供最终结果，即应用层甚至可以不知道I2C的存在。例如电容式触摸屏驱动直接向应用层提供 <code>/dev/input/eventn</code> 的操作接口，接收上报到应用层的输入事件。而不需要直到具体是怎么上报的，甚至应用层不知道触摸屏是使用I2C总线和主机进行数据交互的。</p>
+<p>rk开发板用的触摸屏是汇顶科技的gt1x型电容式触摸屏，驱动代码位于/driver/input/touchscreen/gt1x/gt1x.c，电容触摸屏通过IIC总线与SoC进行通信，利用其自带的触摸IC完成坐标计算后通过IIC将坐标信息传输给SoC，坐标的计算过程不需要SoC的参与，从这个角度上来说，电容触摸屏就是一个挂载到SoC上的IIC slave设备，与通常所说的Sensor是一样的性质。</p>
+<h2 id="44-%E9%87%8D%E7%82%B9%E5%88%86%E6%9E%90">4.4. 重点分析</h2>
+<h3 id="441-%E8%AE%BE%E5%A4%87%E6%A0%91%E5%8C%B9%E9%85%8D%E6%9C%BA%E5%88%B6">4.4.1. 设备树匹配机制</h3>
+<h3 id="442-match%E5%87%BD%E6%95%B0%E5%92%8Cprobe%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E5%85%B3%E7%B3%BB">4.4.2. .match()函数和.probe()函数调用关系</h3>
+<div style="page-break-after: always;"></div>
+# 5. &#x7ED3;&#x8BED;
+<div style="page-break-after: always;"></div>
+# 6. &#x53C2;&#x8003;&#x8D44;&#x6599;
+</body>
+</html>
