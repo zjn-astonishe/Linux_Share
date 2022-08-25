@@ -551,7 +551,7 @@ void of_i2c_register_devices(struct i2c_adapter *adap)
 	struct device_node *bus, *node;
     // 构建i2c_client
 	struct i2c_client *client;
-	/* Only register child devices if the adapter has a node pointer set 设备树节点不为空 */
+	/* Only register child devices if the adapter has a node pointer set */
 	if (!adap->dev.of_node)
 		return;
 	dev_dbg(&adap->dev, "of_i2c: walking child nodes\n");
@@ -560,7 +560,7 @@ void of_i2c_register_devices(struct i2c_adapter *adap)
     // 没找到则从头开始遍历
 	if (!bus)
 		bus = of_node_get(adap->dev.of_node);
-    // 遍历每一个子节点，调用of_i2c_register_device解析设备树节点内容
+    // 遍历每一个子节点，调用of_i2c_register_device解析设备树节点内容并注册为i2c_client
 	for_each_available_child_of_node(bus, node) {
 		if (of_node_test_and_set_flag(node, OF_POPULATED))
 			continue;
@@ -574,6 +574,151 @@ void of_i2c_register_devices(struct i2c_adapter *adap)
 		}
 	}
 	of_node_put(bus);
+}
+```
+
+最终由`of_i2c_register_device()`函数调用`i2c_new_client_device()`函数完成i2c_client的构建。
+
+```C
+/* /drivers/i2c/i2c-core-of.c */
+static struct i2c_client *of_i2c_register_device(struct i2c_adapter *adap, 
+						 						 struct device_node *node)
+{
+	struct i2c_client *client;
+	struct i2c_board_info info;
+	int ret;
+	dev_dbg(&adap->dev, "of_i2c: register %pOF\n", node);
+	ret = of_i2c_get_board_info(&adap->dev, node, &info);
+	if (ret)
+		return ERR_PTR(ret);
+	client = i2c_new_client_device(adap, &info);
+	if (IS_ERR(client))
+		dev_err(&adap->dev, "of_i2c: Failure registering %pOF\n", node);
+	return client;
+}
+
+```C
+/* /drivers/i2c/i2c-core-of.c */
+int of_i2c_get_board_info(struct device *dev, struct device_node *node,
+			  struct i2c_board_info *info)
+{
+	u32 addr;
+	int ret;
+
+	memset(info, 0, sizeof(*info));
+
+	if (of_modalias_node(node, info->type, sizeof(info->type)) < 0) {
+		dev_err(dev, "of_i2c: modalias failure on %pOF\n", node);
+		return -EINVAL;
+	}
+
+	ret = of_property_read_u32(node, "reg", &addr);
+	if (ret) {
+		dev_err(dev, "of_i2c: invalid reg on %pOF\n", node);
+		return ret;
+	}
+
+	if (addr & I2C_TEN_BIT_ADDRESS) {
+		addr &= ~I2C_TEN_BIT_ADDRESS;
+		info->flags |= I2C_CLIENT_TEN;
+	}
+
+	if (addr & I2C_OWN_SLAVE_ADDRESS) {
+		addr &= ~I2C_OWN_SLAVE_ADDRESS;
+		info->flags |= I2C_CLIENT_SLAVE;
+	}
+
+	info->addr = addr;
+	info->of_node = node;
+	info->fwnode = of_fwnode_handle(node);
+
+	if (of_property_read_bool(node, "host-notify"))
+		info->flags |= I2C_CLIENT_HOST_NOTIFY;
+
+	if (of_get_property(node, "wakeup-source", NULL))
+		info->flags |= I2C_CLIENT_WAKE;
+
+	return 0;
+}
+```
+
+```C
+/* /drivers/of/base.c */
+int of_modalias_node(struct device_node *node, char *modalias, int len)
+{
+	const char *compatible, *p;
+	int cplen;
+
+	compatible = of_get_property(node, "compatible", &cplen);
+	if (!compatible || strlen(compatible) > cplen)
+		return -ENODEV;
+	p = strchr(compatible, ',');
+	strlcpy(modalias, p ? p + 1 : compatible, len);
+	return 0;
+}
+```
+
+```C
+/* /drivers/i2c/i2c-core-base.c */
+struct i2c_client *i2c_new_client_device(struct i2c_adapter *adap, 
+										 struct i2c_board_info const *info)
+{
+	struct i2c_client	*client;
+	int			status;
+	client = kzalloc(sizeof *client, GFP_KERNEL);	// 分配内核空间
+	if (!client)
+		return ERR_PTR(-ENOMEM);
+	// 配置client的基本信息
+	client->adapter = adap;
+	client->dev.platform_data = info->platform_data;
+	client->flags = info->flags;
+	client->addr = info->addr
+	client->init_irq = info->irq;
+	if (!client->init_irq)
+		client->init_irq = i2c_dev_irq_from_resources(info->resources,
+							 info->num_resources);
+	strlcpy(client->name, info->type, sizeof(client->name));
+	status = i2c_check_addr_validity(client->addr, client->flags);
+	if (status) {
+		dev_err(&adap->dev, "Invalid %d-bit I2C address 0x%02hx\n",
+			client->flags & I2C_CLIENT_TEN ? 10 : 7, client->addr);
+		goto out_err_silent;
+	}
+	/* Check for address business */
+	status = i2c_check_addr_ex(adap, i2c_encode_flags_to_addr(client));
+	if (status)
+		dev_err(&adap->dev,
+			"%d i2c clients have been registered at 0x%02x",
+			status, client->addr);
+	client->dev.parent = &client->adapter->dev;
+	client->dev.bus = &i2c_bus_type;
+	client->dev.type = &i2c_client_type;
+	client->dev.of_node = of_node_get(info->of_node);
+	client->dev.fwnode = info->fwnode;
+	i2c_dev_set_name(adap, client, info, status);
+	if (info->properties) {
+		status = device_add_properties(&client->dev, info->properties);
+		if (status) {
+			dev_err(&adap->dev,
+				"Failed to add properties to client %s: %d\n",
+				client->name, status);
+			goto out_err_put_of_node;
+		}
+	}
+	status = device_register(&client->dev);
+	if (status)
+		goto out_free_props;
+	dev_dbg(&adap->dev, "client [%s] registered with bus id %s\n",
+		client->name, dev_name(&client->dev));
+	return client;
+out_free_props:
+	...
+out_err_put_of_node:
+device_add_properties(&client->dev, info->properties);
+	...
+out_err_silent:
+	...
+
 }
 ```
 
