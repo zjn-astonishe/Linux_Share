@@ -792,6 +792,178 @@ out:
 
 ### 4.4.1. .match()函数匹配机制
 
+根据文档描述，.match()函数调用的前提是要有i2c_driver或者i2c_client注册到I2C总线。所以尝试从i2c_driver的注册代码中寻找答案。
+
+```C
+/* /drivers/i2c/i2c-core-base.c */
+int i2c_register_driver(struct module *owner, struct i2c_driver *driver)
+{
+	...
+	driver->driver.bus = &i2c_bus_type;
+	INIT_LIST_HEAD(&driver->clients);
+	...
+	/* When registration returns, the driver core
+	 * will have called probe() for all matching-but-unbound devices.
+	 */
+	res = driver_register(&driver->driver);     // 实际注册位置
+	if (res)
+		return res;
+    ...
+}
+```
+
+注意到`i2c_register_driver`函数中实际是调用了`driver_register()`函数完成注册，并且根据注释描述，正是在`driver_register()`中完成了`.match()`和`.probe()`的工作。因此继续进入`driver_register()`函数中进行跟踪。
+
+```C
+/* /drivers/base/driver.c */
+int driver_register(struct device_driver *drv)
+{
+	...
+	ret = bus_add_driver(drv);              // 在总线上添加传递的驱动(将驱动添加到总线的驱动链表中)
+	...
+}
+```
+
+`driver_register()`函数中调用了`bus_add_driver()`函数，将驱动添加到总线上，继续深入直到找到有关`match`和`probe`的函数。
+
+```C
+/* /drivers/base/bus.c */
+int bus_add_driver(struct device_driver *drv)
+{
+	...
+	if (drv->bus->p->drivers_autoprobe)
+    {
+		error = driver_attach(drv);         // 跟踪driver_attach();
+		if (error)
+			goto out_unregister;
+	}
+	...
+}
+```
+```C
+/* /drivers/base/dd.c */
+int driver_attach(struct device_driver *drv)
+{
+	return bus_for_each_dev(drv->bus, NULL, drv, __driver_attach);  // 实际是在调用__driver_attach();
+}
+```
+```C
+/* /drivers/base/bus.c */
+int bus_for_each_dev(struct bus_type *bus, struct device *start,
+		     void *data, int (*fn)(struct device *, void *))
+{
+	struct klist_iter i;
+	struct device *dev;
+	int error = 0;
+
+	if (!bus || !bus->p)
+		return -EINVAL;
+
+	klist_iter_init_node(&bus->p->klist_devices, &i,
+			     (start ? &start->p->knode_bus : NULL));	// 	链表头开始遍历连接在总线上的设备链表
+	while (!error && (dev = next_device(&i)))
+		error = fn(dev, data);
+	klist_iter_exit(&i);
+	return error;
+}
+EXPORT_SYMBOL_GPL(bus_for_each_dev);
+```
+```C
+/* /drivers/base/dd.c */
+static int __driver_attach(struct device *dev, void *data)
+{
+	struct device_driver *drv = data;
+	int ret;
+
+	/*
+	 * Lock device and try to bind to it. We drop the error
+	 * here and always return 0, because we need to keep trying
+	 * to bind to devices and some drivers will return an error
+	 * simply if it didn't support the device.
+	 *
+	 * driver_probe_device() will spit a warning if there
+	 * is an error.
+	 */
+
+	ret = driver_match_device(drv, dev);        // 驱动和设备匹配
+	if (ret == 0) {
+		/* no match */
+		return 0;
+	} else if (ret == -EPROBE_DEFER) {
+		dev_dbg(dev, "Device match requests probe deferral\n");
+		driver_deferred_probe_add(dev);
+	} else if (ret < 0) {
+		dev_dbg(dev, "Bus failed to match device: %d\n", ret);
+		return ret;
+	} /* ret > 0 means positive match */
+
+	......
+
+    device_driver_attach(drv, dev);
+	return 0;
+}
+```
+```C
+/* /drivers/base/dd.c */
+/**
+ * device_driver_attach - attach a specific driver to a specific device
+ * @drv: Driver to attach
+ * @dev: Device to attach it to
+ *
+ * Manually attach driver to a device. Will acquire both @dev lock and
+ * @dev->parent lock if needed.
+ */
+int device_driver_attach(struct device_driver *drv, struct device *dev)
+{
+	int ret = 0;
+	__device_driver_lock(dev, dev->parent);
+	/*
+	 * If device has been removed or someone has already successfully
+	 * bound a driver before us just skip the driver probe call.
+	 */
+	if (!dev->p->dead && !dev->driver)
+		ret = driver_probe_device(drv, dev);
+	__device_driver_unlock(dev, dev->parent);
+	return ret;
+}
+```
+```C
+/* /drivers/base/dd.c */
+/**
+ * driver_probe_device - attempt to bind device & driver together
+ * @drv: driver to bind a device to
+ * @dev: device to try to bind to the driver
+ *
+ * This function returns -ENODEV if the device is not registered,
+ * 1 if the device is bound successfully and 0 otherwise.
+ *
+ * This function must be called with @dev lock held.  When called for a
+ * USB interface, @dev->parent lock must be held as well.
+ *
+ * If the device has a parent, runtime-resume the parent before driver probing.
+ */
+int driver_probe_device(struct device_driver *drv, struct device *dev)
+{
+    ...
+	pm_runtime_barrier(dev);
+	if (initcall_debug)
+		ret = really_probe_debug(dev, drv);
+	else
+		ret = really_probe(dev, drv);
+	...
+}
+```
+
+```C
+/* /drivers/base/base.h */ 
+static inline int driver_match_device(struct device_driver *drv,
+				      struct device *dev)
+{
+	return drv->bus->match ? drv->bus->match(dev, drv) : 1;
+}
+```
+
+至此，可知是`driver_match_device`函数调用了I2C总线的`match()`函数完成对驱动和设备的匹配工作。
 
 
 ### 4.4.2. .probe()函数调用关系
