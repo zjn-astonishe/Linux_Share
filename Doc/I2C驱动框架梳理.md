@@ -17,13 +17,13 @@
 	- [4.2. 注册i2c_adapter并将其添加到I2C总线](#42-注册i2c_adapter并将其添加到i2c总线)
 		- [4.2.1. 注册i2c_adapter到platform总线](#421-注册i2c_adapter到platform总线)
 		- [4.2.2. 将i2c_adapter添加到I2C总线](#422-将i2c_adapter添加到i2c总线)
+		- [4.2.3. 总结](#423-总结)
 	- [4.3. I2C设备驱动开发](#43-i2c设备驱动开发)
 		- [4.3.1. 将I2C控制器暴露给应用的方式](#431-将i2c控制器暴露给应用的方式)
 		- [4.3.2. 将I2C控制器抽象成公共驱动的方式](#432-将i2c控制器抽象成公共驱动的方式)
 	- [4.4. 重点分析](#44-重点分析)
 		- [4.4.1. 何时调用match()函数？何时调用probe()函数？](#441-何时调用match函数何时调用probe函数)
 		- [4.4.2. 设备树匹配机制](#442-设备树匹配机制)
-		- [4.4.3. 设备节点是何时创建](#443-设备节点是何时创建)
 - [5. 结语](#5-结语)
 - [6. 参考资料](#6-参考资料)
 <div STYLE="page-break-after: always;"></div>
@@ -47,7 +47,7 @@ I2C总线是Philips公司开发的一种简单、双向二线制同步串行总�
 下图展示了Linux中I2C驱动架构的基本架构：
 
 <center>
-<img src="https://github.com/zjn-astonishe/Linux_Share/blob/master/Image/image/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/Linux%E5%86%85%E6%A0%B8%E9%87%8CI2C%E5%AD%90%E7%B3%BB%E7%BB%9F%E8%BD%AF%E4%BB%B6%E6%A1%86%E6%9E%B6%E5%9B%BE.png?raw=true" width="80%" />
+<img src="https://github.com/zjn-astonishe/Linux_Share/blob/master/Image/image/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/Linux%E5%86%85%E6%A0%B8%E9%87%8CI2C%E5%AD%90%E7%B3%BB%E7%BB%9F%E8%BD%AF%E4%BB%B6%E6%A1%86%E6%9E%B6%E5%9B%BE.png?raw=true" width="75%" />
 </center>
 
 对于南向开发而言，只需关注架构的内核空间部分。在《Linux设备驱动开发详解》一书第15章《Linux I2C核心、总线与设备驱动》中，将Linux内核里的I2C子系统分为核心、总线驱动和设备驱动三部分。
@@ -303,7 +303,7 @@ int bus_register(struct bus_type *bus)
 
 以TB-RK3568X为例，RK平台采用的是第一种方法。总线驱动的文件存储在路径`/drivers/i2c/busses`中，RK平台的总线驱动文件为`i2c-rk3x.c`。
 
-结合4.1可知，编译进内核的驱动程序要在系统启动后为系统提供服务，则需事先将`init()`函数加入到内核的特定段中。驱动程序对应的`init()`函数是`module_init()`，对应放置的位置是内核中的`initcall6.init`段(据此，也可知内核是先注册总线，后注册驱动)。
+结合[4.1](#41-注册i2c子系统核心层主要是注册i2c总线)可知，编译进内核的驱动程序要在系统启动后为系统提供服务，则需事先将`init()`函数加入到内核的特定段中。驱动程序对应的`init()`函数是`module_init()`，对应放置的位置是内核中的`initcall6.init`段(据此，也可知内核是先注册总线，后注册驱动)。
 
 为了提高代码的重用性，消除多余的样板文件。当module_init和module_exit都不做任何特殊操作时，调用宏定义函数 `module_platform_driver` 替换 `module_init` 和 `module_exit` (实际还要调用一次宏定义函数 `module_driver` 才能完成替换)。
 
@@ -418,26 +418,12 @@ static const struct i2c_algorithm rk3x_i2c_algorithm = {
 
 ### 4.2.2. 将i2c_adapter添加到I2C总线
 
-4.2.1末尾提到：在`rk3x_i2c_probe()`的最后，调用了I2C核心层为总线驱动开放的添加适配器至I2C总线的接口函数`i2c_add_adapter()`。该函数的主要作用有两个：
+[4.2.1](#421-注册i2c_adapter到platform总线)末尾提到：在`rk3x_i2c_probe()`的最后，调用了I2C核心层为总线驱动开放的添加适配器至I2C总线的接口函数`i2c_add_adapter()`。该函数的主要作用有两个：
 - 将对应的I2C总线的id分配给i2c_adapter。因为一个Soc内部通常会有多个I2C控制器，而所有I2C控制器实际都公用同一份总线驱动代码。
 - 解析由i2c_adapter控制的每一个从设备，并构建出i2c_client。设备驱动加载运行需要i2c_client才能继续。
 
 ```C
 /* /drivers/i2c/i2c-core-base.c */
-/**
- * i2c_add_adapter - declare i2c adapter, use dynamic bus number
- * @adapter: the adapter to add
- * Context: can sleep
- *
- * This routine is used to declare an I2C adapter when its bus number
- * doesn't matter or when its bus number is specified by an dt alias.
- * Examples of bases when the bus number doesn't matter: I2C adapters
- * dynamically added by USB links or PCI plugin cards.
- *
- * When this returns zero, a new bus number was allocated and stored
- * in adap->nr, and the specified adapter became available for clients.
- * Otherwise, a negative errno value is returned.
- */
 int i2c_add_adapter(struct i2c_adapter *adapter)
 {
 	struct device *dev = &adapter->dev;
@@ -541,7 +527,7 @@ out_list:
 }
 ```
 
-`i2c_register_adapter()`函数最重要的作用是解析由i2c_adapter控制的每一个从设备，并构建出i2c_client。进而完成i2c_driver和i2c_client的匹配。前者由函数`of_i2c_register_devices()`负责，后者依靠函数`bus_for_each_drv()`实现。
+`i2c_register_adapter()`函数最重要的作用是解析由i2c_adapter控制的每一个从设备，并构建出i2c_client。进而完成i2c_driver和i2c_client的匹配。前者由函数`of_i2c_register_devices()`负责，后者依靠函数`bus_for_each_drv()`调用`i2c_detect()`，寻找I2C总线支持的设备实现。
 
 ```C
 /* /drivers/i2c/i2c-core-of.c */
@@ -714,6 +700,24 @@ out_err_silent:
 }
 ```
 
+### 4.2.3. 总结
+整个过程调用关系如下：
+<pre>
+rk3x_i2c_probe
+	--> i2c_add_adapter
+		--> __i2c_add_numbered_adapter
+			--> i2c_register_adapter
+				--> of_i2c_register_devices
+					--> of_i2c_register_device
+						--> of_i2c_get_board_info
+							--> of_modalias_node
+					--> i2c_new_client_device
+				--> bus_for_each_drv
+					--> __process_new_adapter
+						--> i2c_do_add_adapter
+							--> i2c_detect
+</pre>
+
 ## 4.3. I2C设备驱动开发
 
 完成I2C总线注册和i2c_adapter的注册后，就可以进行I2C设备驱动的开发了。由I2C驱动框架图可知，实现I2C设备驱动通常有两条路径：
@@ -736,57 +740,104 @@ static const struct file_operations i2cdev_fops = {
 	.open		= i2cdev_open,
 	.release	= i2cdev_release,
 };
-//I2C驱动
-static struct i2c_driver i2cdev_driver = {
-	.driver = {
-		.name	= "dev_driver",
-	},
-	.attach_adapter	= i2cdev_attach_adapter,
-	.detach_adapter	= i2cdev_detach_adapter,
-};
+
 #define I2C_MAJOR	89		/* Device major number		*/
 static int __init i2c_dev_init(void)
 {
 	int res;
 
 	printk(KERN_INFO "i2c /dev entries driver\n");
-
-	//注册设备号是89，次设备号范围是0-255、文件操作集合是i2cdev_fops的字符设备
-	res = register_chrdev(I2C_MAJOR, "i2c", &i2cdev_fops);
+	// 申请设备号，I2C_MAJOR为89，次设备号为0，I2C_MINORS为1<<20-1，表示次设备号的数量。
+	// 就是把这个主设备号对应的次设备号都申请了。
+	res = register_chrdev_region(MKDEV(I2C_MAJOR, 0), I2C_MINORS, "i2c");
 	if (res)
 		goto out;
-
-	//注册名字是i2c-dev的设备类
+	// 创建一个同名类，在 /sys/class中可以看到
 	i2c_dev_class = class_create(THIS_MODULE, "i2c-dev");
 	if (IS_ERR(i2c_dev_class)) {
 		res = PTR_ERR(i2c_dev_class);
 		goto out_unreg_chrdev;
 	}
+	i2c_dev_class->dev_groups = i2c_groups;
 
-	//注册i2c适配器设备驱动i2cdev_driver，将来内核注册的每个I2C适配器都会被该驱动以设备节点的方式暴露给应用，在"/sys/class/i2c-dev"目录下可以看到。
-	res = i2c_add_driver(&i2cdev_driver);
+	/* Keep track of adapters which will be added or removed later */
+	// 注册i2c总线的通知函数
+	// 参数2详见下
+	res = bus_register_notifier(&i2c_bus_type, &i2cdev_notifier);
 	if (res)
 		goto out_unreg_class;
 
+	/* Bind to already existing adapters right away */
+	// 遍历i2c总线上的所有设备，每次都执行第二个参数对应的函数
+	i2c_for_each_dev(NULL, i2cdev_attach_adapter);
+
 	return 0;
+
 out_unreg_class:
 	class_destroy(i2c_dev_class);
 out_unreg_chrdev:
-	unregister_chrdev(I2C_MAJOR, "i2c");
+	unregister_chrdev_region(MKDEV(I2C_MAJOR, 0), I2C_MINORS);
 out:
 	printk(KERN_ERR "%s: Driver Initialisation failed\n", __FILE__);
+	return res;
+}
+```
+设备节点是在驱动注册的过程中创建的，调用关系如下：
+<pre>
+i2c_dev_init()
+	i2c_for_each_dev()
+		bus_for_each_dev()
+			i2cdev_attach_adapter()
+				device_create()
+				device_create_file()
+</pre>
+```C
+
+`i2cdev_attach_adapter()`函数调用`device_create()`函数和`device_create_file()`函数完成了设备节点的创建。
+
+static int i2cdev_attach_adapter(struct i2c_adapter *adap)
+{
+	struct i2c_dev *i2c_dev;
+	int res;
+
+	//分配一个i2c_dev对象，并添加到i2c_dev_list链表中
+	i2c_dev = get_free_i2c_dev(adap);
+	if (IS_ERR(i2c_dev))
+		return PTR_ERR(i2c_dev);
+
+	/* 创建设备对象并在sysfs中注册，在/dev目录下创建设备号为MKDEV(I2C_MAJOR, adap->nr)，
+		名称为"i2c-%d"的字符设备节点*/
+	i2c_dev->dev = device_create(i2c_dev_class, &adap->dev,
+				     MKDEV(I2C_MAJOR, adap->nr), NULL,
+				     "i2c-%d", adap->nr);
+	if (IS_ERR(i2c_dev->dev)) {
+		res = PTR_ERR(i2c_dev->dev);
+		goto error;
+	}
+
+	//创建"/sys/class/i2c-dev/"i2c-%d"/name"文件
+	res = device_create_file(i2c_dev->dev, &dev_attr_name);
+	if (res)
+		goto error_destroy;
+
+	pr_debug("i2c-dev: adapter [%s] registered as minor %d\n",
+		 adap->name, adap->nr);
+	return 0;
+error_destroy:
+	device_destroy(i2c_dev_class, MKDEV(I2C_MAJOR, adap->nr));
+error:
+	return_i2c_dev(i2c_dev);
 	return res;
 }
 ```
 
 完成i2c设备驱动的注册后，就可以通过`i2cdev_fops`中提供的各项功能与I2C设备进行交互。
 
-
 ### 4.3.2. 将I2C控制器抽象成公共驱动的方式
 
 该方式是把所有代码都放在驱动层实现，直接向应用层提供最终结果，即应用层甚至可以不知道I2C的存在。例如电容式触摸屏驱动直接向应用层提供 `/dev/input/eventn` 的操作接口，接收上报到应用层的输入事件。而不需要直到具体是怎么上报的，甚至应用层不知道触摸屏是使用I2C总线和主机进行数据交互的。
 
-以汇顶科技的gt1x型电容式触摸屏为例，电容触摸屏通过I2C总线与SoC进行通信，利用其自带的触摸IC完成坐标计算后通过I2C将坐标信息传输给SoC，坐标的计算过程不需要SoC的参与。从这个角度上来说，电容触摸屏就是一个挂载到SoC上的I2C从设备。具体可阅读位于`/driver/input/touchscreen/gt1x/`的源码`gt1x.c`。
+以汇顶科技的gt1x型电容式触摸屏为例，电容触摸屏通过I2C总线与SoC进行通信，利用其自带的触摸IC完成坐标计算后通过I2C将坐标信息传输给SoC，坐标的计算过程不需要SoC的参与。从这个角度上来说，电容触摸屏就是一个挂载到SoC上的I2C从设备。触摸屏内I2C相关的功能函数`gt1x_i2c_write()`和`gt1x_i2c_read()`都被封装到`gt1x_ts_work_func()`中，具体可阅读位于`/driver/input/touchscreen/gt1x/`的源码`gt1x.c`。
 
 ## 4.4. 重点分析
 
@@ -964,23 +1015,141 @@ static int i2c_device_probe(struct device *dev)
 
 ```
 
-整体跟踪流程如下：
+整体流程如下：
 
-![](https://github.com/zjn-astonishe/Linux_Share/blob/master/Image/image/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/%E4%BD%95%E6%97%B6%E8%B0%83%E7%94%A8match()%E5%87%BD%E6%95%B0%E5%92%8Cprobe%E5%87%BD%E6%95%B0.png?raw=true)
+<center>
+<img src="https://github.com/zjn-astonishe/Linux_Share/blob/master/Image/image/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/%E4%BD%95%E6%97%B6%E8%B0%83%E7%94%A8match%E5%87%BD%E6%95%B0%E5%92%8Cprobe%E5%87%BD%E6%95%B0.png?raw=true" width="55%" />
+</center>
 
 ### 4.4.2. 设备树匹配机制
 
-4.1节中
+[4.1](#41-注册i2c子系统核心层主要是注册i2c总线)节中便讨论过`i2c_device_match()`提供了三种匹配方式，并简单介绍了使用注册时配置的`id_table`进行匹配的方法。下面主要讨论设备树匹配方式。
 
+```C
+/* /drivers/i2c/i2c-core-of.c */
+const struct of_device_id*
+i2c_of_match_device(const struct of_device_id *matches,
+		     		struct i2c_client *client)
+{
+	const struct of_device_id *match;
 
-### 4.4.3. 设备节点是何时创建
+	if (!(client && matches))
+		return NULL;
 
+	match = of_match_device(matches, &client->dev);		// 进行匹配
+	if (match)											// 一次匹配成功
+		return match;
+
+	return i2c_of_match_device_sysfs(matches, client);	// 与I2C MUX(I2C多路复用器有关)，内核将MUX通道抽象为逻辑I2C总线号，由Linux I2C Sysfs管理。
+}
+
+```
+```C
+/* /drivers/of/device.c */
+const struct of_device_id *of_match_device(const struct of_device_id *matches,
+					   const struct device *dev)
+{
+	if ((!matches) || (!dev->of_node))
+		return NULL;
+	return of_match_node(matches, dev->of_node);
+}
+```
+```C
+/* /drivers/of/base.c */
+const struct of_device_id *of_match_node(const struct of_device_id *matches,
+					 const struct device_node *node)
+{
+	...
+	match = __of_match_node(matches, node);
+	...
+	return match;
+}
+```
+
+`__of_match_node()`函数是设备树匹配的核心部分——通过得分机制，寻找最佳匹配。
+
+```C
+/* /drivers/of/base.c */
+static
+const struct of_device_id *__of_match_node(const struct of_device_id *matches,
+					   const struct device_node *node)
+{
+	const struct of_device_id *best_match = NULL;
+	int score, best_score = 0;
+	if (!matches)
+		return NULL;
+	// 根据评分来选取最佳匹配
+	for (; matches->name[0] || matches->type[0] || matches->compatible[0]; matches++) {
+		score = __of_device_is_compatible(node, matches->compatible,
+						  matches->type, matches->name);
+		if (score > best_score) {
+			best_match = matches;
+			best_score = score;
+		}
+	}
+	return best_match;
+}
+```
+```C
+/* /drivers/of/base.c */
+static int __of_device_is_compatible(const struct device_node *device,
+				     const char *compat, const char *type, const char *name)
+{
+	struct property *prop;
+	const char *cp;
+	int index = 0, score = 0;
+	/* Compatible match has highest priority */
+	if (compat && compat[0]) {
+		prop = __of_find_property(device, "compatible", NULL);
+		for (cp = of_prop_next_string(prop, NULL); cp;
+		     cp = of_prop_next_string(prop, cp), index++) {
+			if (of_compat_cmp(cp, compat, strlen(compat)) == 0) {
+				score = INT_MAX/2 - (index << 2);	// 评分
+				break;
+			}
+		}
+		if (!score)
+			return 0;
+	}
+	...
+	return score;
+}
+```
+```C
+/* /include/linux/of.h */
+#define of_compat_cmp(s1, s2, l)	strcasecmp((s1), (s2))
+/* /lib/string.c  */
+int strcasecmp(const char *s1, const char *s2)	// 忽略大小写比较字符串
+{
+	int c1, c2;
+	do {
+		c1 = tolower(*s1++);
+		c2 = tolower(*s2++);
+	} while (c1 == c2 && c1 != 0);
+	return c1 - c2;
+}
+```
+
+整体匹配流程如下：
+
+<center>
+<img src="https://github.com/zjn-astonishe/Linux_Share/blob/master/Image/image/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/%E8%AE%BE%E5%A4%87%E6%A0%91%E5%8C%B9%E9%85%8D%E6%9C%BA%E5%88%B6.png?raw=true" width="90%" />
+</center>
+
+> 注：除了设备树匹配所调用的函数从`of_driver_match_device`变成`i2c_of_match_device`，其余地方相差不大。其他总线(如platform，SPI)都是依照上图流程进行匹配，所以就不进行修改了。
 
 
 <div STYLE="page-break-after: always;"></div>
+
 # 5. 结语
 
-<div STYLE="page-break-after: always;"></div>
+本文对Linux中I2C驱动框架进行了简单的介绍。通过分析整体架构和代码结构，了解各个组成部分的功能和相互联系。重点对I2C驱动框架的核心层、总线驱动、设备驱动的代码实现流程进行梳理。并深入分析了`probe()`和`match()`函数的调用时机以及设备树匹配机制。
+
+
+
+
+
+
 # 6. 参考资料
 - Linux内核源码：`.../OpenHarmony/out/kernel/src_tmp/linux-5.10/`
 - 《Linux设备驱动开发详解》
