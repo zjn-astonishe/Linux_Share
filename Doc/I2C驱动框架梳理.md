@@ -966,11 +966,11 @@ static int i2c_device_probe(struct device *dev)
 
 整体跟踪流程如下：
 
-![](https://github.com/zjn-astonishe/Linux_Share/blob/master/Image/image/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/.match()%E5%87%BD%E6%95%B0%E5%8C%B9%E9%85%8D%E6%9C%BA%E5%88%B6.png?raw=true)
+![](https://github.com/zjn-astonishe/Linux_Share/blob/master/Image/image/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/%E4%BD%95%E6%97%B6%E8%B0%83%E7%94%A8match()%E5%87%BD%E6%95%B0%E5%92%8Cprobe%E5%87%BD%E6%95%B0.png?raw=true)
 
 ### 4.4.2. 设备树匹配机制
 
-
+4.1节中
 
 
 ### 4.4.3. 设备节点是何时创建
