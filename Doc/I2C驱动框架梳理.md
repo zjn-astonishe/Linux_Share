@@ -21,8 +21,8 @@
 		- [4.3.1. 将I2C控制器暴露给应用的方式](#431-将i2c控制器暴露给应用的方式)
 		- [4.3.2. 将I2C控制器抽象成公共驱动的方式](#432-将i2c控制器抽象成公共驱动的方式)
 	- [4.4. 重点分析](#44-重点分析)
-		- [4.4.1. .match()函数匹配机制](#441-match函数匹配机制)
-		- [4.4.2. .probe()函数调用关系](#442-probe函数调用关系)
+		- [4.4.1. 何时调用match()函数？何时调用probe()函数？](#441-何时调用match函数何时调用probe函数)
+		- [4.4.2. 设备树匹配机制](#442-设备树匹配机制)
 		- [4.4.3. 设备节点是何时创建](#443-设备节点是何时创建)
 - [5. 结语](#5-结语)
 - [6. 参考资料](#6-参考资料)
@@ -190,7 +190,7 @@ static int __init i2c_init(void)
 
 `i2c_init()`函数中，最重要的便是调用`bus_register(&i2c_bus_type)`函数完成I2C总线的注册。
 
-`i2c_bus_type`是一个`bus_type`结构体变量，它重载了`bus_type`结构体中的几个成员指针变量，其中最重要的是总线名称`.name`以及两个函数指针——`.match()`和`.probe()`。
+`i2c_bus_type`是一个`bus_type`结构体变量，它重载了`bus_type`结构体中的几个成员指针变量，其中最重要的是总线名称`.name`以及两个函数指针——`match()`和`probe()`。
 
 ```C
 /* /drivers/i2c/i2c-core-base.c */
@@ -341,7 +341,7 @@ module_exit(__driver##_exit);
 module_platform_driver(rk3x_i2c_driver);	// 注册i2c_adapter的platform_driver
 ```
 
-`rk3x_i2c_driver`是一个`platform_driver`类型的结构体变量，重载了`*driver`结构体的部分变量(最重要的是匹配表`of_match_table`)和两个函数指针`.probe()`和`.remove()`。
+`rk3x_i2c_driver`是一个`platform_driver`类型的结构体变量，重载了`*driver`结构体的部分变量(最重要的是匹配表`of_match_table`)和两个函数指针`probe()`和`remove()`。
 
 ```C
 /* /drivers/i2c/busses/i2c-rk3x.c */
@@ -790,9 +790,9 @@ out:
 
 ## 4.4. 重点分析
 
-### 4.4.1. .match()函数匹配机制
+### 4.4.1. 何时调用match()函数？何时调用probe()函数？
 
-根据文档描述，.match()函数调用的前提是要有i2c_driver或者i2c_client注册到I2C总线。所以尝试从i2c_driver的注册代码中寻找答案。
+要搞清楚`match()`和`probe()`函数是何时被何者所调用的，需对源码进行深入了解。根据文档描述，`probe()`函数执行于`match()`函数之后，且匹配触发的前提是要有i2c_driver或者i2c_client注册到I2C总线。所以尝试从i2c_driver的注册代码中寻找答案。
 
 ```C
 /* /drivers/i2c/i2c-core-base.c */
@@ -812,7 +812,7 @@ int i2c_register_driver(struct module *owner, struct i2c_driver *driver)
 }
 ```
 
-注意到`i2c_register_driver`函数中实际是调用了`driver_register()`函数完成注册，并且根据注释描述，正是在`driver_register()`中完成了`.match()`和`.probe()`的工作。因此继续进入`driver_register()`函数中进行跟踪。
+注意到`i2c_register_driver`函数中实际是调用了`driver_register()`函数完成注册，并且根据注释描述，正是在`driver_register()`中完成了`match()`和`probe()`的工作。因此继续进入`driver_register()`函数中进行跟踪。
 
 ```C
 /* /drivers/base/driver.c */
@@ -850,15 +850,9 @@ int driver_attach(struct device_driver *drv)
 ```C
 /* /drivers/base/bus.c */
 int bus_for_each_dev(struct bus_type *bus, struct device *start,
-		     void *data, int (*fn)(struct device *, void *))
+		     		 void *data, int (*fn)(struct device *, void *))
 {
-	struct klist_iter i;
-	struct device *dev;
-	int error = 0;
-
-	if (!bus || !bus->p)
-		return -EINVAL;
-
+	...
 	klist_iter_init_node(&bus->p->klist_devices, &i,
 			     (start ? &start->p->knode_bus : NULL));	// 	链表头开始遍历连接在总线上的设备链表
 	while (!error && (dev = next_device(&i)))
@@ -866,25 +860,12 @@ int bus_for_each_dev(struct bus_type *bus, struct device *start,
 	klist_iter_exit(&i);
 	return error;
 }
-EXPORT_SYMBOL_GPL(bus_for_each_dev);
 ```
 ```C
 /* /drivers/base/dd.c */
 static int __driver_attach(struct device *dev, void *data)
 {
-	struct device_driver *drv = data;
-	int ret;
-
-	/*
-	 * Lock device and try to bind to it. We drop the error
-	 * here and always return 0, because we need to keep trying
-	 * to bind to devices and some drivers will return an error
-	 * simply if it didn't support the device.
-	 *
-	 * driver_probe_device() will spit a warning if there
-	 * is an error.
-	 */
-
+	...
 	ret = driver_match_device(drv, dev);        // 驱动和设备匹配
 	if (ret == 0) {
 		/* no match */
@@ -904,15 +885,18 @@ static int __driver_attach(struct device *dev, void *data)
 }
 ```
 ```C
+/* /drivers/base/base.h */ 
+static inline int driver_match_device(struct device_driver *drv,
+				      struct device *dev)
+{
+	return drv->bus->match ? drv->bus->match(dev, drv) : 1;
+}
+```
+
+至此，可知是`driver_match_device`函数调用了I2C总线的`i2c_device_match()`函数完成对驱动和设备的匹配工作。而匹配完成后`probe()`的调用则还需跟踪进`device_driver_attach`函数分析。
+
+```C
 /* /drivers/base/dd.c */
-/**
- * device_driver_attach - attach a specific driver to a specific device
- * @drv: Driver to attach
- * @dev: Device to attach it to
- *
- * Manually attach driver to a device. Will acquire both @dev lock and
- * @dev->parent lock if needed.
- */
 int device_driver_attach(struct device_driver *drv, struct device *dev)
 {
 	int ret = 0;
@@ -929,19 +913,6 @@ int device_driver_attach(struct device_driver *drv, struct device *dev)
 ```
 ```C
 /* /drivers/base/dd.c */
-/**
- * driver_probe_device - attempt to bind device & driver together
- * @drv: driver to bind a device to
- * @dev: device to try to bind to the driver
- *
- * This function returns -ENODEV if the device is not registered,
- * 1 if the device is bound successfully and 0 otherwise.
- *
- * This function must be called with @dev lock held.  When called for a
- * USB interface, @dev->parent lock must be held as well.
- *
- * If the device has a parent, runtime-resume the parent before driver probing.
- */
 int driver_probe_device(struct device_driver *drv, struct device *dev)
 {
     ...
@@ -953,20 +924,52 @@ int driver_probe_device(struct device_driver *drv, struct device *dev)
 	...
 }
 ```
-
+在`really_probe()`函数中，调用了总线的`probe()`函数，以I2C为例就是`i2c_device_probe()`。
 ```C
-/* /drivers/base/base.h */ 
-static inline int driver_match_device(struct device_driver *drv,
-				      struct device *dev)
+/* /drivers/base/dd.c */
+static int really_probe(struct device *dev, struct device_driver *drv)
 {
-	return drv->bus->match ? drv->bus->match(dev, drv) : 1;
+	...
+	if (dev->bus->probe) {
+		ret = dev->bus->probe(dev);
+		if (ret)
+			goto probe_failed;
+	} else if (drv->probe) {
+		ret = drv->probe(dev);
+		if (ret)
+			goto probe_failed;
+	}
+    ...
 }
 ```
+`i2c_device_probe()`函数中，通过`driver->probe()`调用定义的i2c_driver的`probe()`函数。以gt1x型电容式触摸屏的驱动为例，则是`gt1x_ts_probe()`。
+```C
+/* /drivers/i2c/i2c-core-base.c */
+static int i2c_device_probe(struct device *dev)
+{
+	...
+	/*
+	 * When there are no more users of probe(),
+	 * rename probe_new to probe.
+	 */
+	if (driver->probe_new)
+		status = driver->probe_new(client);
+	else if (driver->probe)
+		status = driver->probe(client,
+				       i2c_match_id(driver->id_table, client));
+	else
+		status = -EINVAL;
+	...
+}
 
-至此，可知是`driver_match_device`函数调用了I2C总线的`match()`函数完成对驱动和设备的匹配工作。
+```
 
+整体跟踪流程如下：
 
-### 4.4.2. .probe()函数调用关系
+![](https://github.com/zjn-astonishe/Linux_Share/blob/master/Image/image/Linux%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%AF%A6%E8%A7%A3/.match()%E5%87%BD%E6%95%B0%E5%8C%B9%E9%85%8D%E6%9C%BA%E5%88%B6.png?raw=true)
+
+### 4.4.2. 设备树匹配机制
+
 
 
 
