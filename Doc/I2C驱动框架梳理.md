@@ -21,8 +21,9 @@
 		- [4.3.1. 将I2C控制器暴露给应用的方式](#431-将i2c控制器暴露给应用的方式)
 		- [4.3.2. 将I2C控制器抽象成公共驱动的方式](#432-将i2c控制器抽象成公共驱动的方式)
 	- [4.4. 重点分析](#44-重点分析)
-		- [4.4.1. 设备树匹配机制](#441-设备树匹配机制)
-		- [4.4.2. .match()函数和.probe()函数调用关系](#442-match函数和probe函数调用关系)
+		- [4.4.1. .match()函数匹配机制](#441-match函数匹配机制)
+		- [4.4.2. .probe()函数调用关系](#442-probe函数调用关系)
+		- [4.4.3. 设备节点是何时创建](#443-设备节点是何时创建)
 - [5. 结语](#5-结语)
 - [6. 参考资料](#6-参考资料)
 <div STYLE="page-break-after: always;"></div>
@@ -295,8 +296,6 @@ int bus_register(struct bus_type *bus)
 
 ### 4.2.1. 注册i2c_adapter到platform总线
 
-如果要在系统启动时便能享受到I2C总线的相关服务，就需要调用`i2c_init()`函数。该函数通过`postcore_initcall(i2c_init)`被放置在内核中的`initcall2.init`段处，这和驱动开发中调用`module_init()`类似。于是，在内核启动时，系统调用`do_initcall()`函数，根据指针数组`initcall_levels[2]`找到`__initcall2_start`指针。由`vmlinux.lds.h`可知，该指针指向`initcall2.init`段的起始地址，系统依次取出段中的每个函数指针并执行，从而使得系统能享受到I2C总线的相关服务。同样，编译进内核的驱动程序都通过这种方式完成启动并提供服务，具体可以查询“Linux的initcall机制”进行了解。
-
 `i2c_adapter`一般通过两种方法注册：
 
 - 一种做法是为I2C适配器创建一个platform设备注册到`platform_bus_type`总线上与I2C适配器的platform驱动匹配，在驱动的probe函数中向I2C总线添加`i2c_adapter`和提供`i2c_algorithm`通信方法。
@@ -555,7 +554,7 @@ void of_i2c_register_devices(struct i2c_adapter *adap)
 	if (!adap->dev.of_node)
 		return;
 	dev_dbg(&adap->dev, "of_i2c: walking child nodes\n");
-    // 查找设备树节点中名称有直接描述I2C总线的节点，为了缩小查找范围
+    // 查找设备树节点中名称有直接描述I2C总线的节点，缩小查找范围
 	bus = of_get_child_by_name(adap->dev.of_node, "i2c-bus");
     // 没找到则从头开始遍历
 	if (!bus)
@@ -577,8 +576,6 @@ void of_i2c_register_devices(struct i2c_adapter *adap)
 }
 ```
 
-最终由`of_i2c_register_device()`函数调用`i2c_new_client_device()`函数完成i2c_client的构建。
-
 ```C
 /* /drivers/i2c/i2c-core-of.c */
 static struct i2c_client *of_i2c_register_device(struct i2c_adapter *adap, 
@@ -596,48 +593,42 @@ static struct i2c_client *of_i2c_register_device(struct i2c_adapter *adap,
 		dev_err(&adap->dev, "of_i2c: Failure registering %pOF\n", node);
 	return client;
 }
+```
+
+在构建i2c_client的过程中，需要读取设备树信息赋值给对应的i2c_device。这个操作由`of_i2c_get_board_info()`函数完成。例如：调用`of_modalias_node()`函数获得`client->name`。
 
 ```C
 /* /drivers/i2c/i2c-core-of.c */
 int of_i2c_get_board_info(struct device *dev, struct device_node *node,
-			  struct i2c_board_info *info)
+			  			  struct i2c_board_info *info)
 {
 	u32 addr;
 	int ret;
-
 	memset(info, 0, sizeof(*info));
-
 	if (of_modalias_node(node, info->type, sizeof(info->type)) < 0) {
 		dev_err(dev, "of_i2c: modalias failure on %pOF\n", node);
 		return -EINVAL;
 	}
-
-	ret = of_property_read_u32(node, "reg", &addr);
+		ret = of_property_read_u32(node, "reg", &addr); // 对应设备树中的<reg>标签
 	if (ret) {
 		dev_err(dev, "of_i2c: invalid reg on %pOF\n", node);
 		return ret;
 	}
-
 	if (addr & I2C_TEN_BIT_ADDRESS) {
 		addr &= ~I2C_TEN_BIT_ADDRESS;
 		info->flags |= I2C_CLIENT_TEN;
 	}
-
 	if (addr & I2C_OWN_SLAVE_ADDRESS) {
 		addr &= ~I2C_OWN_SLAVE_ADDRESS;
 		info->flags |= I2C_CLIENT_SLAVE;
 	}
-
 	info->addr = addr;
 	info->of_node = node;
 	info->fwnode = of_fwnode_handle(node);
-
 	if (of_property_read_bool(node, "host-notify"))
 		info->flags |= I2C_CLIENT_HOST_NOTIFY;
-
 	if (of_get_property(node, "wakeup-source", NULL))
 		info->flags |= I2C_CLIENT_WAKE;
-
 	return 0;
 }
 ```
@@ -649,14 +640,16 @@ int of_modalias_node(struct device_node *node, char *modalias, int len)
 	const char *compatible, *p;
 	int cplen;
 
-	compatible = of_get_property(node, "compatible", &cplen);
+	compatible = of_get_property(node, "compatible", &cplen);	// 查找"compatible"属性
 	if (!compatible || strlen(compatible) > cplen)
 		return -ENODEV;
-	p = strchr(compatible, ',');
+	p = strchr(compatible, ',');	// 定位，"manufacturer, model"
 	strlcpy(modalias, p ? p + 1 : compatible, len);
 	return 0;
 }
 ```
+
+最终由`i2c_new_client_device()`函数调用的`i2c_new_client_device()`根据获得的`info`完成i2c_client的构建。
 
 ```C
 /* /drivers/i2c/i2c-core-base.c */
@@ -672,24 +665,24 @@ struct i2c_client *i2c_new_client_device(struct i2c_adapter *adap,
 	client->adapter = adap;
 	client->dev.platform_data = info->platform_data;
 	client->flags = info->flags;
-	client->addr = info->addr
+	client->addr = info->addr		// 对应设备树中的<reg>标签
 	client->init_irq = info->irq;
 	if (!client->init_irq)
 		client->init_irq = i2c_dev_irq_from_resources(info->resources,
-							 info->num_resources);
+							 						  info->num_resources);
 	strlcpy(client->name, info->type, sizeof(client->name));
 	status = i2c_check_addr_validity(client->addr, client->flags);
 	if (status) {
 		dev_err(&adap->dev, "Invalid %d-bit I2C address 0x%02hx\n",
-			client->flags & I2C_CLIENT_TEN ? 10 : 7, client->addr);
+				client->flags & I2C_CLIENT_TEN ? 10 : 7, client->addr);
 		goto out_err_silent;
 	}
 	/* Check for address business */
 	status = i2c_check_addr_ex(adap, i2c_encode_flags_to_addr(client));
 	if (status)
 		dev_err(&adap->dev,
-			"%d i2c clients have been registered at 0x%02x",
-			status, client->addr);
+				"%d i2c clients have been registered at 0x%02x",
+				status, client->addr);
 	client->dev.parent = &client->adapter->dev;
 	client->dev.bus = &i2c_bus_type;
 	client->dev.type = &i2c_client_type;
@@ -700,8 +693,8 @@ struct i2c_client *i2c_new_client_device(struct i2c_adapter *adap,
 		status = device_add_properties(&client->dev, info->properties);
 		if (status) {
 			dev_err(&adap->dev,
-				"Failed to add properties to client %s: %d\n",
-				client->name, status);
+					"Failed to add properties to client %s: %d\n",
+					client->name, status);
 			goto out_err_put_of_node;
 		}
 	}
@@ -709,12 +702,11 @@ struct i2c_client *i2c_new_client_device(struct i2c_adapter *adap,
 	if (status)
 		goto out_free_props;
 	dev_dbg(&adap->dev, "client [%s] registered with bus id %s\n",
-		client->name, dev_name(&client->dev));
+			client->name, dev_name(&client->dev));
 	return client;
 out_free_props:
 	...
 out_err_put_of_node:
-device_add_properties(&client->dev, info->properties);
 	...
 out_err_silent:
 	...
@@ -724,26 +716,112 @@ out_err_silent:
 
 ## 4.3. I2C设备驱动开发
 
-由I2C驱动框架图可知，实现I2C设备驱动通常有两条路径：
+完成I2C总线注册和i2c_adapter的注册后，就可以进行I2C设备驱动的开发了。由I2C驱动框架图可知，实现I2C设备驱动通常有两条路径：
 
 ### 4.3.1. 将I2C控制器暴露给应用的方式
 
-该方式采用标准的 `file_operations` 字符设备的形式，将 `i2c_adapter` 设备化，在`/dev`目录下创建`i2c-n(n=0, 1, 2...)`设备节点。所实现的驱动可看作是一种" `i2c_driver` 成员函数 + 字符设备驱动"的虚拟驱动，需要由应用层通过 `read()` 、 `write()` 函数根据芯片手册直接对I2C控制器进行配置时序等操作，以实现对从设备的控制。这种方式是把对硬件的具体操作放在应用层去实现，适合用来快速测试一款I2C设备的功能，或者在 `i2c_driver` 工作不正常的时候排查具体是设备驱动工作问题还是主机驱动工作问题。并不能作为主流的开发方式。详细可见 `.../OpenHarmony/out/kernel/src_tmp/linux-5.10/drivers/i2c/i2c-dev.c` 。
+该方式采用标准的 `file_operations` 字符设备的形式，将 `i2c_adapter` 设备化，在`/dev`目录下创建`i2c-n(n=0, 1, 2...)`设备节点。所实现的驱动可看作是一种" `i2c_driver` 成员函数 + 字符设备驱动"的虚拟驱动，需要由应用层通过 `read()` 、 `write()` 函数根据芯片手册直接对I2C控制器进行配置时序等操作，以实现对从设备的控制。这种方式是把对硬件的具体操作放在应用层去实现，适合用来快速测试一款I2C设备的功能，或者在 `i2c_driver` 工作不正常的时候排查具体是设备驱动工作问题还是主机驱动工作问题。并不能作为主流的开发方式。
+
+驱动开发流程中的初始化、注册等准备流程工作和上文描述原理相同，不再赘述。
+
+```C
+/* //drivers/i2c/i2c-dev.c */
+//设备节点的操作方法
+static const struct file_operations i2cdev_fops = {
+	.owner		= THIS_MODULE,
+	.llseek		= no_llseek,
+	.read		= i2cdev_read,
+	.write		= i2cdev_write,
+	.unlocked_ioctl	= i2cdev_ioctl,
+	.open		= i2cdev_open,
+	.release	= i2cdev_release,
+};
+//I2C驱动
+static struct i2c_driver i2cdev_driver = {
+	.driver = {
+		.name	= "dev_driver",
+	},
+	.attach_adapter	= i2cdev_attach_adapter,
+	.detach_adapter	= i2cdev_detach_adapter,
+};
+#define I2C_MAJOR	89		/* Device major number		*/
+static int __init i2c_dev_init(void)
+{
+	int res;
+
+	printk(KERN_INFO "i2c /dev entries driver\n");
+
+	//注册设备号是89，次设备号范围是0-255、文件操作集合是i2cdev_fops的字符设备
+	res = register_chrdev(I2C_MAJOR, "i2c", &i2cdev_fops);
+	if (res)
+		goto out;
+
+	//注册名字是i2c-dev的设备类
+	i2c_dev_class = class_create(THIS_MODULE, "i2c-dev");
+	if (IS_ERR(i2c_dev_class)) {
+		res = PTR_ERR(i2c_dev_class);
+		goto out_unreg_chrdev;
+	}
+
+	//注册i2c适配器设备驱动i2cdev_driver，将来内核注册的每个I2C适配器都会被该驱动以设备节点的方式暴露给应用，在"/sys/class/i2c-dev"目录下可以看到。
+	res = i2c_add_driver(&i2cdev_driver);
+	if (res)
+		goto out_unreg_class;
+
+	return 0;
+out_unreg_class:
+	class_destroy(i2c_dev_class);
+out_unreg_chrdev:
+	unregister_chrdev(I2C_MAJOR, "i2c");
+out:
+	printk(KERN_ERR "%s: Driver Initialisation failed\n", __FILE__);
+	return res;
+}
+```
+
+完成i2c设备驱动的注册后，就可以通过`i2cdev_fops`中提供的各项功能与I2C设备进行交互。
+
 
 ### 4.3.2. 将I2C控制器抽象成公共驱动的方式
 
 该方式是把所有代码都放在驱动层实现，直接向应用层提供最终结果，即应用层甚至可以不知道I2C的存在。例如电容式触摸屏驱动直接向应用层提供 `/dev/input/eventn` 的操作接口，接收上报到应用层的输入事件。而不需要直到具体是怎么上报的，甚至应用层不知道触摸屏是使用I2C总线和主机进行数据交互的。
 
-rk开发板用的触摸屏是汇顶科技的gt1x型电容式触摸屏，驱动代码位于/driver/input/touchscreen/gt1x/gt1x.c，电容触摸屏通过IIC总线与SoC进行通信，利用其自带的触摸IC完成坐标计算后通过IIC将坐标信息传输给SoC，坐标的计算过程不需要SoC的参与，从这个角度上来说，电容触摸屏就是一个挂载到SoC上的IIC slave设备，与通常所说的Sensor是一样的性质。
+以汇顶科技的gt1x型电容式触摸屏为例，电容触摸屏通过I2C总线与SoC进行通信，利用其自带的触摸IC完成坐标计算后通过I2C将坐标信息传输给SoC，坐标的计算过程不需要SoC的参与。从这个角度上来说，电容触摸屏就是一个挂载到SoC上的I2C从设备。具体可阅读位于`/driver/input/touchscreen/gt1x/`的源码`gt1x.c`。
 
 ## 4.4. 重点分析
 
-### 4.4.1. 设备树匹配机制
+### 4.4.1. .match()函数匹配机制
 
-### 4.4.2. .match()函数和.probe()函数调用关系
+
+
+### 4.4.2. .probe()函数调用关系
+
+
+
+### 4.4.3. 设备节点是何时创建
+
+
 
 <div STYLE="page-break-after: always;"></div>
 # 5. 结语
 
 <div STYLE="page-break-after: always;"></div>
 # 6. 参考资料
+- Linux内核源码：`.../OpenHarmony/out/kernel/src_tmp/linux-5.10/`
+- 《Linux设备驱动开发详解》
+  - 第15章 《Linux I2C核心、总线与设备驱动》
+  - 第18章 《ARM Linux 设备树》
+- [i2c驱动移植流程](https://www.csdn.net/tags/MtjacgxsOTA2MzQtYmxvZwO0O0OO0O0O.html)
+- [Linux驱动分析——I2C子系统](https://blog.csdn.net/fang_yang_wa/article/details/113344992)
+- [linux驱动之I2C子系统](https://blog.csdn.net/weixin_45842280/article/details/120737457?spm=1001.2101.3001.6650.2&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-2-120737457-blog-126225958.pc_relevant_multi_platform_whitelistv4&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-2-120737457-blog-126225958.pc_relevant_multi_platform_whitelistv4&utm_relevant_index=3)
+- [基于RK3399的Linux驱动开发 -- I2C驱动框架](https://blog.csdn.net/qq_28515331/article/details/93196889?spm=1001.2101.3001.6650.3&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-3-93196889-blog-90739753.pc_relevant_aa&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-3-93196889-blog-90739753.pc_relevant_aa&utm_relevant_index=5)
+- [Linux I2C驱动整理（以RK3399Pro+Kernel 4.4为例）](https://www.cnblogs.com/DF11G/p/16008437.html)
+- [I2C适配器驱动及设备驱动代码详解](https://blog.csdn.net/weixin_42129680/article/details/113736259)
+- [Linux驱动之I2C总线驱动开发](https://blog.csdn.net/cmh477660693/article/details/54577453)
+- [linux内核I2C子系统详解——看这一篇就够了](https://blog.csdn.net/weixin_42031299/article/details/125610751?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-125610751-blog-113344992.pc_relevant_multi_platform_featuressortv2dupreplace&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-125610751-blog-113344992.pc_relevant_multi_platform_featuressortv2dupreplace&utm_relevant_index=2)
+- [I2C协议和驱动框架分析（二）](https://blog.csdn.net/weixin_43555423/article/details/90739753)
+- [【linux iic子系统】i2c整体框图【精髓部分】（五）](https://blog.csdn.net/zz2633105/article/details/117384201)
+- [Linux系统驱动之I2C_Adapter驱动框架讲解与编写](https://cloud.tencent.com/developer/article/1914836)
+- [Input子系统-Touch Screen](https://blog.csdn.net/qq_40629752/article/details/107943500)
+- [i2c的设备树和驱动是如何匹配以及何时调用probe的](https://www.elecfans.com/d/1434120.html)
+- [I2C子系统之适配器的设备接口分析(i2c-dev.c文件分析)](https://blog.csdn.net/weixin_42031299/article/details/125359621)
